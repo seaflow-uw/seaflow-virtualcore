@@ -1,0 +1,1050 @@
+split[1]
+split[[]][1]
+split[[1]]
+data.frame(list(strsplit(as.character(meta1$Filename), " ")))
+strsplit(as.character(meta1$Filename), " ")
+list(strsplit(as.character(meta1$Filename), " "))
+data.frame(list(strsplit(as.character(meta1$Filename), " ")))
+list(strsplit(as.character(meta1$Filename), " "))
+list(strsplit(as.character(meta1$Filename), " "))[[1]]
+split <- list(strsplit(as.character(meta1$Filename), " "))[[1]]
+split
+?strsplit
+split <- data.frame(list(strsplit(as.character(meta1$Filename), " "))[[1]])
+data.frame(list(strsplit(as.character(meta1$Filename), ""))[[1]])
+split <- data.frame(list(strsplit(as.character(meta1$Filename), " "))[[1]])
+t(list(strsplit(as.character(meta1$Filename), " "))[[1]])
+split <- data.frame(t(list(strsplit(as.character(meta1$Filename), " "))[[1]]))
+split
+data.frame(list(strsplit(as.character(meta1$Filename), " "))[[1]])
+#################
+### LOG INFO ####
+#################
+library(xlsx)#
+path <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.xlsx")#
+#
+meta1 <- read.xlsx(path,sheetIndex=1)#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+meta2 <- read.xlsx(path,sheetIndex=2)#
+meta2$file <- paste0(meta2$Filename, ".fcs")#
+################
+### SUMMARY ####
+################
+library(lattice)#
+library(zoo)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+summary.table1 <- read.csv(paste(path1,"/summary.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/summary.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.
+head(merged)
+#################
+### LOG INFO ####
+#################
+library(xlsx)#
+path <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.xlsx")#
+#
+meta1 <- read.xlsx(path,sheetIndex=1)#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+meta2 <- read.xlsx(path,sheetIndex=2)#
+meta2$file <- paste0(meta2$Filename, ".fcs")#
+################
+### SUMMARY ####
+################
+library(lattice)#
+library(zoo)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+summary.table1 <- read.csv(paste(path1,"/summary.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/summary.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.
+head(merged)
+xyplot(Timepoint ~ abundance| Experiment * Treatment * i ,data=merged, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| Experiment * Treatment * i ,data=merged, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+exp <- subset(merged, Experiment < 4)
+head(exp)
+tail(exp)
+xyplot(abundance ~ Timepoint| Experiment * Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| Experiment * Treatment ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| Experiment ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| Experiment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+exp <- subset(merged, Experiment < 4 & i == "synecho" | i == "prochloro" | i == "picoeuk")
+xyplot(abundance ~ Timepoint| Experiment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ rev(Timepoint)| Experiment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| Experiment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+exp <- subset(merged, Experiment == 1 & i == "synecho" | i == "prochloro" | i == "picoeuk")#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+exp
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")
+exp <- subset(phyto, Experiment == 1)
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, Experiment == 1)#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+head(exp)
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+exp <- subset(phyto, Experiment == 2)#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+exp <- subset(phyto, Experiment == 3)#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+xyplot
+?xyplot
+#################
+### LOG INFO ####
+#################
+library(xlsx)#
+path <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.xlsx")#
+#
+meta1 <- read.xlsx(path,sheetIndex=1)#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+meta2 <- read.xlsx(path,sheetIndex=2)#
+meta2$file <- paste0(meta2$Filename, ".fcs")#
+################
+### SUMMARY ####
+################
+library(lattice)#
+library(zoo)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+summary.table1 <- read.csv(paste(path1,"/summary.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/summary.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, Experiment == 3)#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+?xyplot
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file, scale=list(relation == 'free'))
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file, scales=list(relation == 'free'))
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file, scales=list(relation = 'free'))
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+exp <- subset(phyto, Experiment == 1)#
+xyplot(abundance ~ Timepoint| Treatment * i ,data=exp, pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+xyplot(abundance ~ Timepoint| i ,data=exp, groups= Treatment , pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), col=exp$.SCO.file)
+xyplot(abundance ~ Timepoint| i ,data=exp, groups= Treatment , pty='o', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| i ,data=exp, groups= Treatment , pty='l', pch=1, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| i ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=phyto, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=phyto, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+head(merged)
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_edge")#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+exp
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")
+head(phyto)
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=phyto, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+pico <- subset(merged, i == "picoeuk")
+pico <- subset(merged, i == "picoeuk")#
+#
+plot(pico$abundance, col=pico$.SCO.file)
+pico
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'))
+df <- subset(exp, Experiment == 2)
+df
+df <- subset(exp, Experiment == 2 $ i == 'prochloro')
+df <- subset(exp, Experiment == 2 & i == 'prochloro')
+df
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), autokey=T)
+?xyplot
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=list(col=1:10))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free', col=1:10), auto.key=T)
+trellis.par.get
+?trellis.par.get
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)#
+trellis.par.set(superpose.symbol = list(col = 1:10))
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('black','red','darkred',"darkgreen","lightred","lightgreen",'green',"gold","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('black','red','darkred',"darkgreen","red1","lightgreen",'green',"gold","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('black','red','darkred',"darkgreen","orange","lightgreen",'green',"gold","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=2, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('black','red','darkred',"darkgreen","orange","lightgreen",'green',"gold","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=2, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('black','red','darkred',"darkblue","orange","lightblue",'blue',"darkgrey","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=2, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=2, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+library(flowCore)#
+library(splancs)#
+library(popcycle)#
+library(plotrix)#
+library(caroline)#
+library(flowDensity)#
+library(flowViz)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+plot.cytogram <- function (evtopp, para.x = "FSC.small.stuff", para.y = "X692.40.small.stuff", ...)#
+{#
+    cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3",#
+        "seagreen3", "yellow", "orangered2", "darkred"))#
+    par(pty = "s")#
+    plot(evtopp[, c(para.x, para.y)], pch = 16, cex = 0.3,col = densCols(evtopp[, c(para.x, para.y)],#
+          colramp = cols), xlim = c(1, 2^16), ylim = c(1, 2^16), ...)#
+          }#
+#
+plot.vct.cytogram <- function (opp, para.x = "fsc_small", para.y = "chl_small", ...)#
+          {#
+      par(pty = "s")#
+      plot(opp[, c(para.x, para.y)], pch = 16, cex = 0.3, col = as.numeric(as.factor(opp$pop)),#
+                    xlim = c(1, 2^16), ylim = c(1, 2^16),  ...)#
+              legend("topleft", legend = (unique(opp$pop)), col = unique(as.numeric(as.factor(opp$pop))),#
+                  pch = 16, pt.cex = 0.6, bty = "n")#
+                    }
+#################
+### LOG INFO ####
+#################
+library(xlsx)#
+path <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.xlsx")#
+#
+meta1 <- read.xlsx(path,sheetIndex=1)#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+meta2 <- read.xlsx(path,sheetIndex=2)#
+meta2$file <- paste0(meta2$Filename, ".fcs")#
+################
+### SUMMARY ####
+################
+library(lattice)#
+library(zoo)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+summary.table1 <- read.csv(paste(path1,"/summary.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/summary.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+library(xlsx)
+library(rJava)
+library(xlsx)
+meta1 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.csv")#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+#
+meta2 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data2.csv")#
+meta2$file <- paste0(meta2$Filename, ".fcs")
+library(lattice)#
+library(zoo)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+summary.table1 <- read.csv(paste(path1,"/summary.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/summary.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+head(merged)
+which(merged$i == "prochloro" & Experiment =="3")
+which(merged$i == "prochloro" & merged$Experiment =="3")
+merged[which(merged$i == "prochloro" & merged$Experiment =="3"), 'abundance'] <- 0
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+merged[which(merged$i == "prochloro" & merged$Experiment =="1"), 'abundance'] <- 0#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+merged <- rbind(merged1, merged2)#
+#
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+merged[which(merged$i == "prochloro" & merged$Experiment =="1"), 'abundance'] <- NA#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+pico <- subset(merged, i == "picoeuk")#
+plot(pico$abundance, col=pico$.SCO.file)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=1, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black")))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"darkblue","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"4blue","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue4","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue34","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue4","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue2","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue3","orange","lightblue",'blue',"green","black"), pch=16))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+trellis.par.set(superpose.symbol = list(col = c('darkgrey','red','darkred',"blue3","orange","lightblue",'blue',"green","black"), pch=16, cex=1.5))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+library(ssPopModel)#
+library(popcycle)#
+#
+time.interval <- 60#
+n.breaks <- 57 # only needed if popname = NULL#
+popname <- "synecho"
+library(popcycle)
+library(lattice)#
+library(zoo)#
+library(scales)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Nick-samples/Penny")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations/Penny")#
+summary.table1 <- read.csv(paste(path1,"/raw-results.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/raw-results.csv", sep=""))
+meta4 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Leo-Penny_Comparison_Jan2018.txt")
+library(lattice)#
+library(zoo)#
+library(scales)#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Nick-samples/Penny")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations/Penny")#
+summary.table1 <- read.csv(paste(path1,"/raw-results.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/raw-results.csv", sep=""))
+merged <- merge(summary.table1, meta4, by="file", all.x=TRUE)
+merged$abundance <- merged$n / merged$volume
+## HARMONIZATION#
+leo <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Nick-samples/summary.csv")#
+leo$sample <- sub('.fcs',"", leo$file)#
+#
+merged$sample <- sub('P.fcs',"", merged$file)#
+#
+comp <- merge(merged, leo, by=c('sample'))#
+beads <- subset(comp, i.y=='beads' & i.x=='beads')#
+prochloro <- subset(comp, i.y=='prochloro' & i.x=='prochloro')#
+synecho <- subset(comp, i.y=='synecho' & i.x=='synecho')#
+picoeuk <- subset(comp, i.y=='picoeuk' & i.x=='picoeuk')#
+#
+par(mfrow=c(2,2), mar=c(4,4,2,2))#
+plot(beads$abundance.x, beads$abundance.y, pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)#
+plot(prochloro$abundance.x, prochloro$abundance.y,pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Prochlorococcus', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)#
+plot(synecho$abundance.x, synecho$abundance.y, pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Synechoccus', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)#
+plot(picoeuk$abundance.x, picoeuk$abundance.y, pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Picoeuk', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+library(plotly)
+plot_ly(beads$abundance.x, beads$abundance.y, pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+?plot_ly
+plot_ly(beads[,c("abundance.x","abundance.y")], pch=21, cex=2, bg=alpha('red3', 0.5), col='red', main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads[,c("abundance.x","abundance.y")], pch=21, cex=2, colors=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads, x=~abundance.x, y=~abundance.y, pch=21, cex=2, colors=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(economics, x = ~pop)#
+plot_ly(economics, x = ~date, y = ~pop)#
+# plot_ly() doesn't require data frame(s), which allows one to take #
+# advantage of trace type(s) designed specifically for numeric matrices#
+plot_ly(z = ~volcano)#
+plot_ly(z = ~volcano, type = "surface")
+plot_ly(beads, x=~abundance.x, y=~abundance.y, symbol=21, cex=2, colors=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads, x=~abundance.x, y=~abundance.y, symbol=21, cex=2, color=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads, x=~abundance.x, y=~abundance.y, symbol=21, size=2, color=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads, x=~abundance.x, y=~abundance.y, symbol=21, size=1.5, color=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+plot_ly(beads, x=~abundance.x, y=~abundance.y, symbol=21, size=1.25, color=alpha('red3', 0.5), main='Beads', asp=1, ylab="Leo", xlab="Penny"); abline(0,1, lty=2)
+library(flowCore)#
+library(splancs)#
+library(popcycle)#
+library(plotrix)#
+library(caroline)#
+library(flowDensity)#
+library(flowViz)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))
+meta1 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data.csv")#
+meta1$file <- paste0(meta1$Filename, ".fcs")#
+#
+meta2 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data2.csv")#
+meta2$file <- paste0(meta2$Filename, ".fcs")#
+#
+meta3 <- read.csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Gradients2\ Flow\ Data3.csv")#
+meta3$file <- paste0(meta3$Filename, ".fcs")#
+#
+################
+### SUMMARY ####
+################
+library(lattice)#
+library(zoo)#
+library(scales)#
+#
+path1 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/ResourceRatioExperiments")#
+path2 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Stations")#
+#
+summary.table1 <- read.csv(paste(path1,"/raw-results.csv", sep=""))#
+summary.table2 <- read.csv(paste(path2,"/raw-results.csv", sep=""))#
+#
+### MERGE#
+merged1 <- merge(summary.table1, meta1, by="file", all.x=TRUE)#
+merged2 <- merge(summary.table2, meta2, by="file", all.x=TRUE)#
+merged <- rbind(merged1, merged2)
+### CALCULATE CELL ABUNDANCE#
+merged$abundance <- merged$n / merged$Volume..ul.#
+merged[which(merged$i == "prochloro" & merged$Experiment =="1"), 'abundance'] <- NA
+merged$Timepoint <- factor(merged$Timepoint, levels=rev(levels(merged$Timepoint)))#
+#
+phyto <- subset(merged, i == "synecho" | i == "prochloro" | i == "picoeuk")#
+exp <- subset(phyto, .SCO.file == "Gradient_Edge")#
+#
+trellis.par.set(superpose.symbol = list(col = alpha(c('darkgrey','red','darkred',"green3","orange","lightgreen",'green',"black","darkgrey"), 0.5), pch=16, cex=1.5))#
+xyplot(abundance ~ Timepoint| i * Experiment ,data=exp, groups= Treatment , pty='o', pch=16, cex=1.5, panel = panel.superpose, ylab=substitute(paste("abundance (10"^{6}, " cells L"^{-1},')')), scales=list(relation = 'free'), auto.key=T)
+path3 <- paste("~/Documents/DATA/SeaFlow/SF_GRADIENTS/Gradient-2.0/Influx/Nick-samples")#
+summary.table3 <- read.csv(paste(path3,"/raw-results.csv", sep=""))#
+#
+merged <- merge(summary.table3, meta3, by="file", all.x=TRUE)
+merged$abundance <- round(merged$n / merged$Volume..ul.,2)
+beads <- subset(merged, i == "beads")
+nrow(beads)
+save.sfl
+library(popcycle)#
+library(plotrix)
+save.sfl
+sfl.file <- paste0(path, cruise, "/",cruise,".sfl", gga= FALSE, west=FALSE)
+cruise <- "SCOPE_1"#
+path <- "~/Desktop/OPP_allcruises/"#
+opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
+vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
+db <- paste0(path,cruise, "/",cruise,".db")
+sfl.file <- paste0(path, cruise, "/",cruise,".sfl", gga= FALSE, west=FALSE)
+save.sfl(db, cruise, sfl.file=sfl.file)
+seaflowpy_importsfl
+save.sfl
+OPP <- concatenate.evtopp(opp.list, n=100000, transform=T)
+concatenate.evtopp <- function(evtopp.list, n=50000, transform=TRUE,...){#
+  n <- as.numeric(n)#
+  DF <- NULL#
+  i <- 0#
+  for (file in evtopp.list){#
+        message(round(100*i/length(evtopp.list)), "% completed \r", appendLF=FALSE)#
+#
+        tryCatch({#
+          df <- readSeaflow(file,transform=transform,...)#
+          df <- df[round(seq(1,nrow(df), length.out=round(n/length(evtopp.list)))),]#
+#
+            if(any(is.na(df))) next#
+            DF <- rbind(DF, df)#
+            }, error = function(e) {#
+              cat(paste0("Error with file ", file, ": ", e))#
+          })#
+#
+          i <- i + 1#
+          flush.console()#
+          }#
+#
+      return(DF)
+}
+OPP <- concatenate.evtopp(opp.list, n=100000, transform=T)
+opp.list
+cruise <- "SCOPE_1"#
+path <- "~/Desktop/OPP_allcruises/"#
+opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
+vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
+db <- paste0(path,cruise, "/",cruise,".db")#
+#
+opp.list <- get.opp.files(db)
+OPP <- concatenate.evtopp(opp.list, n=100000, transform=T)
+opp.list
+paste0(path, cruise, opp.list)
+paste0(path, cruise,"/", opp.list)
+OPP <- concatenate.evtopp(paste0(path, cruise,"/", opp.list), n=100000, transform=T)
+opp.list
+path.to.opp.list <- paste0(path, cruise, "/", cruise,"_opp","/50", opp.list)#
+#
+OPP <- concatenate.evtopp(path.to.opp.list, n=100000, transform=T)
+path.to.opp.list <- paste0(path, cruise, "/", cruise,"_opp","/50/", opp.list)#
+#
+OPP <- concatenate.evtopp(path.to.opp.list, n=100000, transform=T)
+cruise <- "SCOPE_1"#
+path <- "/Users/francois/Desktop/OPP_allcruises/"#
+opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
+vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
+db <- paste0(path,cruise, "/",cruise,".db")#
+#
+opp.list <- get.opp.files(db)#
+#
+path.to.opp.list <- paste0(path, cruise, "/", cruise,"_opp","/50/", opp.list)#
+#
+OPP <- concatenate.evtopp(path.to.opp.list, n=100000, transform=T)
+?readSeaflow
+opp.list
+par(mfrow=c(3,2))#
+  plot(df.o$fsc, df.o$d1.fsc, xlim=c(8000,62000), ylim=c(0,62000),main="D1")#
+    points(df.c$fsc+comp.fsc,df.c$d1.fsc+comp.d1, col=2)#
+    points(ref.o$fsc, ref.o$d1.fsc, pch=16)#
+    points(ref.c$fsc+comp.fsc, ref.c$d1.fsc+comp.d1, col=2,pch=16)#
+  plot(df.o$fsc, df.o$d2.fsc, xlim=c(8000,62000), ylim=c(0,62000),main="D2")#
+    points(df.c$fsc+comp.fsc,df.c$d2.fsc+comp.d2, col=2)#
+    points(ref.o$fsc, ref.o$d2.fsc, pch=16)#
+    points(ref.c$fsc+comp.fsc, ref.c$d2.fsc+comp.d2, col=2,pch=16)#
+  plot(sm.lm.d1, "OLS", main=paste("Small particles D1"))#
+    legend("topleft", paste("slope:",notch.small.D1,"(",notch.small.D1_2.5,"-",notch.small.D1_97.5,")"))#
+  plot(sm.lm.d2, "OLS", main=paste("Small particles D2"))#
+    legend("topleft", paste("slope:",notch.small.D2,"(",notch.small.D2_2.5,"-",notch.small.D2_97.5,")"))#
+  plot(lg.lm.d1, "OLS", main=paste("Large particles D1"))#
+    legend("topleft", paste("slope:",notch.large.D1,"(",notch.large.D1_2.5,"-",notch.large.D1_97.5,")"))#
+  plot(lg.lm.d2, "OLS", main=paste("Large particles D2"))#
+    legend("topleft", paste("slope:",notch.large.D2,"(",notch.large.D2_2.5,"-",notch.large.D2_97.5,")"))
+library(lmodel2)#
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/1.bead_calibration/")#
+SLOPES <- NULL
+ins <- 740
+print(ins)#
+#
+ALL <- read.csv(paste0(ins,"-summary.csv"))#
+  ALL$pmt <- 'coastal'#
+  id <- which((grepl("oligo", ALL$file))==T)#
+  ALL[id, "pmt"] <- 'oligo'#
+  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))#
+  ALL <- ALL[order(ALL$beads.size),]#
+#
+   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)#
+   ref.o <- subset(df.o, beads.size ==1.00)#
+   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)#
+   ref.c <- subset(df.c, beads.size ==1.00)#
+#
+   if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)#
+    }#
+#
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.fs.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
+DF
+c(df.o$fsc.med,df.c$fsc.med+comp.fsc)
+c(df.o$d1.med,df.c$d1.fs.med+comp.d1)
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)
+SLOPES
+par(mfrow=c(3,2))#
+  plot(df.o$fsc, df.o$d1.fsc, xlim=c(8000,62000), ylim=c(0,62000),main="D1")#
+    points(df.c$fsc+comp.fsc,df.c$d1.fsc+comp.d1, col=2)#
+    points(ref.o$fsc, ref.o$d1.fsc, pch=16)#
+    points(ref.c$fsc+comp.fsc, ref.c$d1.fsc+comp.d1, col=2,pch=16)#
+  plot(df.o$fsc, df.o$d2.fsc, xlim=c(8000,62000), ylim=c(0,62000),main="D2")#
+    points(df.c$fsc+comp.fsc,df.c$d2.fsc+comp.d2, col=2)#
+    points(ref.o$fsc, ref.o$d2.fsc, pch=16)#
+    points(ref.c$fsc+comp.fsc, ref.c$d2.fsc+comp.d2, col=2,pch=16)#
+  plot(sm.lm.d1, "OLS", main=paste("Small particles D1"))#
+    legend("topleft", paste("slope:",notch.small.D1,"(",notch.small.D1_2.5,"-",notch.small.D1_97.5,")"))#
+  plot(sm.lm.d2, "OLS", main=paste("Small particles D2"))#
+    legend("topleft", paste("slope:",notch.small.D2,"(",notch.small.D2_2.5,"-",notch.small.D2_97.5,")"))#
+  plot(lg.lm.d1, "OLS", main=paste("Large particles D1"))#
+    legend("topleft", paste("slope:",notch.large.D1,"(",notch.large.D1_2.5,"-",notch.large.D1_97.5,")"))#
+  plot(lg.lm.d2, "OLS", main=paste("Large particles D2"))#
+    legend("topleft", paste("slope:",notch.large.D2,"(",notch.large.D2_2.5,"-",notch.large.D2_97.5,")"))
+plot(DF$fsc, DF$d1.fsc, xlim=c(8000,62000), ylim=c(0,62000),main="D1")
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main="D1")
+DF
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))
+comp.fsc
+comp.d1
+df.o
+DF
+plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc+comp.fsc,df.c$d1.fsc+comp.d1, col=2)
+df.c$fsc+comp
+df.c$fsc+comp.fsc
+comp.fsc
+df.c
+comp.fsc
+comp.d1
+comp.d2
+df.o$d1.med[-1]
+df.c$d1.med
+df.o
+df.o$fsc.med[-1] - df.c$fsc.med
+plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc+comp.fsc,df.c$d1.fsc+comp.d1, col=2)#
+    points(ref.o$fsc, ref.o$d1.fsc, pch=16)#
+    points(ref.c$fsc+comp.fsc, ref.c$d1.fsc+comp.d1, col=2,pch=16)
+ref.c$fsc+comp.fsc
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+  plot(df.o$fsc.med, df.o$d2.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d2.med+comp.d2, col=2)#
+    points(ref.o$fsc.med, ref.o$d2.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d2.med+comp.d2, col=2,pch=16)
+lines(sm.lm.d1, "OLS", main=paste("Small particles D1"))
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS", main=paste("Small particles D1"))#
+      legend("topleft", paste("slope:",notch.small.D1,"(",notch.small.D1_2.5,"-",notch.small.D1_97.5,")"))
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")
+lines(lg.lm.d1, "OLS")
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS",col='blue')#
+      lines(lg.lm.d1, "OLS",col='green')
+lines(sm.lm.d1, "OLS")
+lines(lg.lm.d1, "OLS")
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+print(ins)#
+#
+ALL <- read.csv(paste0(ins,"-summary.csv"))#
+  ALL$pmt <- 'coastal'#
+  id <- which((grepl("oligo", ALL$file))==T)#
+  ALL[id, "pmt"] <- 'oligo'#
+  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))#
+  ALL <- ALL[order(ALL$beads.size),]#
+#
+   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)#
+   ref.o <- subset(df.o, beads.size ==1.00)#
+   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)#
+   ref.c <- subset(df.c, beads.size ==1.00)#
+#
+   if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med) # [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings#
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)#
+    }#
+#
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.fs.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))#
+#
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(inst))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+par(mfrow=c(3,2))#
+  plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+plot(df.o$fsc.med, df.o$d1.med, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+sm.lm.d1
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.o$fsc.med+comp.fsc,df.o$d1.med+comp.d1, col=1)#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)
+read.csv(paste0(ins,"-summary.csv"))
+if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)* 0 # [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings #
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med) * 0#
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)* 0#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)* 0#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)* 0#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)* 0#
+   #  }
+}
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.fs.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
+DF
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.o$fsc.med+comp.fsc,df.o$d1.med+comp.d1, col=1)#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+print(ins)#
+#
+ALL <- read.csv(paste0(ins,"-summary.csv"))#
+  ALL$pmt <- 'coastal'#
+  id <- which((grepl("oligo", ALL$file))==T)#
+  ALL[id, "pmt"] <- 'oligo'#
+  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))#
+  ALL <- ALL[order(ALL$beads.size),]#
+#
+   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)#
+   ref.o <- subset(df.o, beads.size ==1.00)#
+   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)#
+   ref.c <- subset(df.c, beads.size ==1.00)#
+#
+   if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)# [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings #
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med) #
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)#
+   }#
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))#
+#
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)#
+  plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.o$fsc.med+comp.fsc,df.o$d1.med+comp.d1, col=1)#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))
+points(df.o$fsc.med+comp.fsc,df.o$d1.med+comp.d1, col=1)
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.o$fsc.med,df.o$d1.med, col=1)#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS")
+lines(lg.lm.d1, "OLS",col=2)
+lines(lg.lm.d1, "OLS",col=3)
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS")#
+      lines(lg.lm.d1, "OLS",col=3)
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS"); lines(sm.lm.d1, "OLS",col='blue')#
+      lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green'
+lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green')
+plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS"); lines(sm.lm.d1, "OLS",col='blue')#
+      lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green')
+png("ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)#
+par(mfrow=c(3,2))#
+#
+SLOPES <- NULL#
+#
+for(ins in c(989,751,740)){#
+print(ins)#
+#
+ALL <- read.csv(paste0(ins,"-summary.csv"))#
+  ALL$pmt <- 'coastal'#
+  id <- which((grepl("oligo", ALL$file))==T)#
+  ALL[id, "pmt"] <- 'oligo'#
+  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))#
+  ALL <- ALL[order(ALL$beads.size),]#
+#
+   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)#
+   ref.o <- subset(df.o, beads.size ==1.00)#
+   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)#
+   ref.c <- subset(df.c, beads.size ==1.00)#
+#
+   if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)# [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings #
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med) #
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)#
+   }#
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))#
+#
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)#
+  plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS"); lines(sm.lm.d1, "OLS",col='blue')#
+      lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green')#
+#
+}#
+#
+dev.off()
+plot(DF$fsc, DF$d2, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d2.med+comp.d2, col=2)#
+    points(ref.o$fsc.med, ref.o$d2.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d2.med+comp.d2, col=2,pch=16)#
+      lines(sm.lm.d2, "OLS"); lines(sm.lm.d2, "OLS",col='blue')#
+      lines(lg.lm.d2, "OLS");lines(lg.lm.d2, "OLS",col='green')
+png("ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)#
+par(mfrow=c(3,2))#
+#
+SLOPES <- NULL#
+#
+for(ins in c(989,751,740)){#
+print(ins)#
+#
+ALL <- read.csv(paste0(ins,"-summary.csv"))#
+  ALL$pmt <- 'coastal'#
+  id <- which((grepl("oligo", ALL$file))==T)#
+  ALL[id, "pmt"] <- 'oligo'#
+  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))#
+  ALL <- ALL[order(ALL$beads.size),]#
+#
+   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)#
+   ref.o <- subset(df.o, beads.size ==1.00)#
+   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)#
+   ref.c <- subset(df.c, beads.size ==1.00)#
+#
+   if(ins == 740){#
+     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)# [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings #
+     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med) #
+     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)#
+     }else{#
+     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)#
+     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)#
+     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)#
+   }#
+DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))#
+#
+#SMALL#
+sm <- subset(DF, size <= 1)#
+sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)#
+#
+#LARGE#
+lg <- subset(DF, size >= 1)#
+lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)#
+#
+notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)#
+notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)#
+notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)#
+notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)#
+#
+notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)#
+notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)#
+notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)#
+notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)#
+#
+notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)#
+notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)#
+notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)#
+notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)#
+#
+slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))#
+SLOPES <- rbind(SLOPES, slope)#
+  plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)#
+    points(ref.o$fsc.med, ref.o$d1.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)#
+      lines(sm.lm.d1, "OLS"); lines(sm.lm.d1, "OLS",col='blue')#
+      lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green')#
+#
+  plot(DF$fsc, DF$d2, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))#
+    points(df.c$fsc.med+comp.fsc,df.c$d2.med+comp.d2, col=2)#
+    points(ref.o$fsc.med, ref.o$d2.med, pch=16)#
+    points(ref.c$fsc.med+comp.fsc, ref.c$d2.med+comp.d2, col=2,pch=16)#
+      lines(sm.lm.d2, "OLS"); lines(sm.lm.d2, "OLS",col='blue')#
+      lines(lg.lm.d2, "OLS");lines(lg.lm.d2, "OLS",col='green')#
+#
+}#
+#
+dev.off()
+list.files(paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data",cruise,"data"), "00-00$",full.names=T, recursive=T)
+allcruises <- c("SCOPE6", "DeepDOM", "MBARI1","Gradient1")#
+cruise <- allcruises[4]
+cruise
+list.files(paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data",cruise,"data"), "00-00$",full.names=T, recursive=T)
+paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data",cruise,"data")
+list.files(paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/",cruise,"data"), "00-00$",full.names=T, recursive=T)
+if(cruise == "SCOPE6" | cruise == "Gradient1") list <- list.files(paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/",cruise,"data"), "00-00$",full.names=T, recursive=T)#
+  if(cruise == "DeepDOM"| cruise == "MBARI1") list <- list.files(paste0("~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/",cruise,"data"), ".evt$",full.names=T, recursive=T)

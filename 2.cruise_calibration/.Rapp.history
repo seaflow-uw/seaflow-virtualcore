@@ -1,0 +1,1084 @@
+library(popcycle)#
+library(dplyr)#
+
+path <- "/Users/francois/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606/"#
+path2 <- "/Users/francois/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606_opp/"#
+path3 <- "/Users/francois/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606_vct/"#
+evt.list <- get.evt.files(path)#
+
+# SCOPE_16#
+#
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+id <- unique(findInterval(influx$time_HST, sfl$date))#
+  list <- sfl[id,"file"]#
+#
+  stat <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/stat.csv")#
+  beads <- subset(stat, pop == 'beads')#
+    plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+#
+#
+  #### CALCULATE BEADS COORDINATE#
+  beads.fsc <- median(beads$fsc_small)#
+  beads.d1.small <- round(beads.fsc * notch.small.D1 + intersect.small.D1)#
+  beads.d1.large <- round(beads.fsc * notch.large.D1 + intersect.large.D1)#
+  beads.d2.small <- round(beads.fsc * notch.small.D2 + intersect.small.D2)#
+  beads.d2.large <- round(beads.fsc * notch.large.D2 + intersect.large.D2)#
+#
+
+#
+#
+width <- 2500#
+ALL <- NULL#
+#
+#
+#
+for (i in 1:length(list)){#
+#
+  print(list[i])#
+#
+  evt <- readSeaflow(paste0(path,list[i]),transform=F)#
+#
+#
+  # Filtering noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Correction for the difference of sensitivity between D1 and D2#
+  origin <- median(evt.[evt.$D2>5000,'D2'])-median(evt.[evt.$D1>5000,'D1'])#
+#
+  # if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)#
+  # } else df <- evt.#
+  # plot.cytogram(df, "D1", "D2"); abline(b=1, a=origin)#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  #origin <- 10000#
+  #width <- 2500#
+  aligned <- subset(evt., D2 < (D1+origin) + width & (D1+origin) < D2 + width )#
+#
+#
+  for(corr in c(2500,5000,7500,10000)){#
+#
+    print(paste("corr=", corr))#
+#
+  ### OFFSET#
+  offset.small.D1 <- beads.d1.small + corr#
+  offset.small.D2 <- beads.d2.small + corr#
+  offset.large.D1 <- beads.d1.large + corr#
+  offset.large.D2 <- beads.d2.large + corr#
+#
+#
+#   if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)#
+#   } else aligned. <- aligned#
+# par(mfrow=c(2,2))#
+# plot.cytogram(aligned., "D1", "D2")#
+# plot.cytogram(aligned., "fsc_small", "D1")#
+# plot.cytogram(aligned., "fsc_small", "D2")#
+# plot.cytogram(aligned., "fsc_small", "chl_small")#
+#
+opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+    D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+opp$pop <- 0#
+#
+# par(mfrow=c(2,2))#
+# plot.cytogram(opp ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+# plot.cytogram(opp , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+# plot.cytogram(opp , "fsc_small", "pe")#
+# plot.cytogram(opp , "fsc_small", "chl_small")#
+#
+#
+#
+print("Beads")#
+  if(corr==2500) plot.cytogram(opp , "fsc_small", "pe")#
+  if(corr==2500) poly.beads <- getpoly(quiet=TRUE)#
+  b <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  opp[row.names(b),'pop'] <- "beads"#
+#
+print("Syn")#
+  if(corr==2500)  poly.syn <- getpoly(quiet=TRUE)#
+  s <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.syn, bound=TRUE, quiet=TRUE))#
+  opp[row.names(s),'pop'] <- "synecho"#
+#
+print("Pro")#
+x <- subset(opp, pop==0)#
+  if(corr==2500) plot.cytogram(opp , "fsc_small", "chl_small")#
+  if(corr==2500)  poly.pro <- getpoly(quiet=TRUE)#
+  p <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pro, bound=TRUE, quiet=TRUE))#
+  opp[row.names(p),'pop'] <- "prochloro"#
+#
+x <- subset(opp, pop==0)#
+l <- x[which(x$chl_small > 35000 & x$fsc_small > 35000),] # picoeuk#
+opp[row.names(l),'pop'] <- "pico"#
+#
+png(paste0("~/Documents/DATA/SeaFlow/Calibration/cruise_calibration/SCOPE_6data/", basename(list[i]),"-corr",corr,".png"),width=9, height=12, unit='in', res=100)#
+par(mfrow=c(1,2))#
+plot.vct.cytogram(opp , "fsc_small", "pe")#
+plot.vct.cytogram(opp , "fsc_small", "chl_small")#
+dev.off()#
+#
+fr <- median(sfl$flow_rate)#
+n.opp <- nrow(opp)#
+n.evt <- nrow(evt)#
+n.evt. <- nrow(evt.)#
+beads <- nrow(b)#
+syn <- nrow(s)#
+pro <- nrow(p)#
+pico <- nrow(l)#
+#
+all <- data.frame(cbind(file=as.character(list[i]), fr, n.opp, n.evt, n.evt., beads, pro, syn, pico, origin, offset.small.D1, offset.large.D1,offset.small.D2, offset.large.D2, width, corr))#
+#
+ALL <- rbind(ALL, all)#
+#
+    }#
+}#
+#
+#write.csv(ALL, "~/Documents/DATA/SeaFlow/DeepDOM/COMPinflux-seaflow.csv", quote=F, row.names=F)#
+write.csv(ALL, "~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/COMPinflux-seaflow.csv", quote=F, row.names=F)#
+#
+#
+
+  #### CALCULATE BEADS COORDINATE#
+  beads.fsc <- median(beads$fsc_small)#
+  beads.d1.small <- round(beads.fsc * notch.small.D1 + intersect.small.D1)#
+  beads.d1.large <- round(beads.fsc * notch.large.D1 + intersect.large.D1)#
+  beads.d2.small <- round(beads.fsc * notch.small.D2 + intersect.small.D2)#
+  beads.d2.large <- round(beads.fsc * notch.large.D2 + intersect.large.D2)#
+#
+#
+
+#
+  slopes <- read.csv("~/Documents/DATA/SeaFlow/Calibration/bead_calibration/seaflow_filter_MERGED_slopes.csv")#
+    notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+    notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+    notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+    notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+    intersect.small.D1 <- slopes[slopes$ins== inst,'intersect.small.D1']#
+    intersect.small.D2 <- slopes[slopes$ins== inst,'intersect.small.D2']#
+    intersect.large.D1 <- slopes[slopes$ins== inst,'intersect.large.D1']#
+    intersect.large.D2 <- slopes[slopes$ins== inst,'intersect.large.D2']#
+
+  inst <- 751#
+#
+  slopes <- read.csv("~/Documents/DATA/SeaFlow/Calibration/bead_calibration/seaflow_filter_MERGED_slopes.csv")#
+    notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+    notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+    notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+    notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+    intersect.small.D1 <- slopes[slopes$ins== inst,'intersect.small.D1']#
+    intersect.small.D2 <- slopes[slopes$ins== inst,'intersect.small.D2']#
+    intersect.large.D1 <- slopes[slopes$ins== inst,'intersect.large.D1']#
+    intersect.large.D2 <- slopes[slopes$ins== inst,'intersect.large.D2']#
+#
+
+# SCOPE_16#
+#
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+id <- unique(findInterval(influx$time_HST, sfl$date))#
+  list <- sfl[id,"file"]#
+#
+  stat <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/stat.csv")#
+  beads <- subset(stat, pop == 'beads')#
+    plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+#
+#
+  #### CALCULATE BEADS COORDINATE#
+  beads.fsc <- median(beads$fsc_small)#
+  beads.d1.small <- round(beads.fsc * notch.small.D1 + intersect.small.D1)#
+  beads.d1.large <- round(beads.fsc * notch.large.D1 + intersect.large.D1)#
+  beads.d2.small <- round(beads.fsc * notch.small.D2 + intersect.small.D2)#
+  beads.d2.large <- round(beads.fsc * notch.large.D2 + intersect.large.D2)#
+#
+
+#
+#
+width <- 2500#
+ALL <- NULL#
+#
+#
+#
+for (i in 1:length(list)){#
+#
+  print(list[i])#
+#
+  evt <- readSeaflow(paste0(path,list[i]),transform=F)#
+#
+#
+  # Filtering noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Correction for the difference of sensitivity between D1 and D2#
+  origin <- median(evt.[evt.$D2>5000,'D2'])-median(evt.[evt.$D1>5000,'D1'])#
+#
+  # if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)#
+  # } else df <- evt.#
+  # plot.cytogram(df, "D1", "D2"); abline(b=1, a=origin)#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  #origin <- 10000#
+  #width <- 2500#
+  aligned <- subset(evt., D2 < (D1+origin) + width & (D1+origin) < D2 + width )#
+#
+#
+  for(corr in c(2500,5000,7500,10000)){#
+#
+    print(paste("corr=", corr))#
+#
+  ### OFFSET#
+  offset.small.D1 <- beads.d1.small + corr#
+  offset.small.D2 <- beads.d2.small + corr#
+  offset.large.D1 <- beads.d1.large + corr#
+  offset.large.D2 <- beads.d2.large + corr#
+#
+#
+#   if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)#
+#   } else aligned. <- aligned#
+# par(mfrow=c(2,2))#
+# plot.cytogram(aligned., "D1", "D2")#
+# plot.cytogram(aligned., "fsc_small", "D1")#
+# plot.cytogram(aligned., "fsc_small", "D2")#
+# plot.cytogram(aligned., "fsc_small", "chl_small")#
+#
+opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+    D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+opp$pop <- 0#
+#
+# par(mfrow=c(2,2))#
+# plot.cytogram(opp ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+# plot.cytogram(opp , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+# plot.cytogram(opp , "fsc_small", "pe")#
+# plot.cytogram(opp , "fsc_small", "chl_small")#
+#
+#
+#
+print("Beads")#
+  if(corr==2500) plot.cytogram(opp , "fsc_small", "pe")#
+  if(corr==2500) poly.beads <- getpoly(quiet=TRUE)#
+  b <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  opp[row.names(b),'pop'] <- "beads"#
+#
+print("Syn")#
+  if(corr==2500)  poly.syn <- getpoly(quiet=TRUE)#
+  s <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.syn, bound=TRUE, quiet=TRUE))#
+  opp[row.names(s),'pop'] <- "synecho"#
+#
+print("Pro")#
+x <- subset(opp, pop==0)#
+  if(corr==2500) plot.cytogram(opp , "fsc_small", "chl_small")#
+  if(corr==2500)  poly.pro <- getpoly(quiet=TRUE)#
+  p <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pro, bound=TRUE, quiet=TRUE))#
+  opp[row.names(p),'pop'] <- "prochloro"#
+#
+x <- subset(opp, pop==0)#
+l <- x[which(x$chl_small > 35000 & x$fsc_small > 35000),] # picoeuk#
+opp[row.names(l),'pop'] <- "pico"#
+#
+png(paste0("~/Documents/DATA/SeaFlow/Calibration/cruise_calibration/SCOPE_6data/", basename(list[i]),"-corr",corr,".png"),width=9, height=12, unit='in', res=100)#
+par(mfrow=c(1,2))#
+plot.vct.cytogram(opp , "fsc_small", "pe")#
+plot.vct.cytogram(opp , "fsc_small", "chl_small")#
+dev.off()#
+#
+fr <- median(sfl$flow_rate)#
+n.opp <- nrow(opp)#
+n.evt <- nrow(evt)#
+n.evt. <- nrow(evt.)#
+beads <- nrow(b)#
+syn <- nrow(s)#
+pro <- nrow(p)#
+pico <- nrow(l)#
+#
+all <- data.frame(cbind(file=as.character(list[i]), fr, n.opp, n.evt, n.evt., beads, pro, syn, pico, origin, offset.small.D1, offset.large.D1,offset.small.D2, offset.large.D2, width, corr))#
+#
+ALL <- rbind(ALL, all)#
+#
+    }#
+}#
+#
+#write.csv(ALL, "~/Documents/DATA/SeaFlow/DeepDOM/COMPinflux-seaflow.csv", quote=F, row.names=F)#
+write.csv(ALL, "~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/COMPinflux-seaflow.csv", quote=F, row.names=F)#
+#
+
+#
+# SCOPE_16#
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- influx[order(influx$time_HST), ]#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+#
+
+#
+  if(inst == 740) VC <- 0.136#
+  if(inst == 751) VC <- 0.143#
+  if(inst == 989) VC <- 0.149#
+
+#
+#
+ALL[which(ALL$corr == 2500),'col'] <- 1#
+ALL[which(ALL$corr == 5000),'col'] <- 2#
+ALL[which(ALL$corr == 7500),'col'] <- 3#
+ALL[which(ALL$corr == 10000),'col'] <- 4#
+#
+
+head(ALL)#
+
+### SCOPE_16#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pro")#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'syn']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="syn")#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'pico']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pico")#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+  ALL <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/COMPinflux-seaflow.csv")#
+  ALL$time <- as.POSIXct(basename(as.character(ALL$file)), format = "%Y-%m-%dT%H-%M-%S", tz = "GMT")#
+
+head(ALL)#
+
+#
+#
+ALL[which(ALL$corr == 2500),'col'] <- 1#
+ALL[which(ALL$corr == 5000),'col'] <- 2#
+ALL[which(ALL$corr == 7500),'col'] <- 3#
+ALL[which(ALL$corr == 10000),'col'] <- 4#
+
+#
+### SCOPE_16#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pro")#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'syn']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="syn")#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'pico']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pico")#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+#
+
+ALL[,'n.opp']/ALL[,'n.evt.']#
+
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'syn']/(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'pico']/(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+### SCOPE_16#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pro")#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'syn']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="syn")#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'pico']/(3*VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pico")#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+summary(ALL)#
+
+3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']#
+
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+  plot(df$time, df[,'pro']/min(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/mdedian(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/median(3*VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/median(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+### SCOPE_16#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pro")#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'syn']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="syn")#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'pico']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pico")#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+#
+
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+#
+  df <- subset(ALL, corr == 5000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+df <- subset(ALL, corr == 5000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+#
+### SCOPE_16#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pro")#
+  points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'syn']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="syn")#
+  points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(ALL$time, ALL[,'pico']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']), col=ALL[,'col'], main="pico")#
+  points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+#
+#
+
+#
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+  df <- subset(ALL, corr == 7500)#
+
+plot(df$time, df[,'pro']/(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+  plot(df$time, df[,'pro']/median(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+  df <- subset(ALL, corr == 5000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+
+influx#
+
+influx[which(influx$population == 'prochloro'),3]#
+
+ALL[,'pro']/(VC*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.']#
+
+)#
+
+#
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col='darkgrey')#
+#
+  df <- subset(ALL, corr == 10000)#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col='darkgrey')#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col='darkgrey')#
+
+influx#
+
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m'])#
+#
+
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m']/5)#
+
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m']/5)#
+
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m']/5)#
+#
+  df <- subset(ALL, corr == 10000)#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col=influx[which(influx$population == 'synecho'),'Depth_m']/5)#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col=influx[which(influx$population == 'picoeuk'),'Depth_m']/5)#
+
+#
+  df <- subset(ALL, corr == 10000)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m']/5)#
+#
+  df <- subset(ALL, corr == 10000)#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col=influx[which(influx$population == 'synecho'),'Depth_m']/5)#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col=influx[which(influx$population == 'picoeuk'),'Depth_m']/5)#
+
+#
+#
+  df <- subset(ALL, corr == 7500)#
+  par(mfrow=c(2,2),cex=1.2)#
+  plot(df$time, df[,'pro']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'prochloro'),"time_HST"],influx[which(influx$population == 'prochloro'),3],pch=1, cex=2, col=influx[which(influx$population == 'prochloro'),'Depth_m']/5)#
+#
+  df <- subset(ALL, corr == 10000)#
+  plot(df$time, df[,'syn']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'synecho'),"time_HST"],influx[which(influx$population == 'synecho'),3],pch=1, cex=2, col=influx[which(influx$population == 'synecho'),'Depth_m']/5)#
+  plot(df$time, df[,'pico']/max(VC*df[,'fr']*df[,'n.opp']/df[,'n.evt.']), type='o')#
+    points(influx[which(influx$population == 'picoeuk'),"time_HST"],influx[which(influx$population == 'picoeuk'),3],pch=1, cex=2, col=influx[which(influx$population == 'picoeuk'),'Depth_m']/5)#
+
+#
+# DEEPDOM#
+influx <- read.delim("~/Documents/DATA/SeaFlow/DeepDOM/influx/surface_samples_metadata.tab")#
+  influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
+  influx <- influx[order(influx$time), ]#
+sfl <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/seaflow/sfl.csv")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+#
+  ALL <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/COMPinflux-seaflow.csv")#
+  id2 <- match(ALL[,'file'],sfl[,"file"])#
+  ALL$time <- sfl[id2, 'date']#
+  ALL <- ALL[order(ALL$time), ]#
+#
+
+  inst <- 989#
+
+#
+#
+  if(inst == 740) VC <- 0.136#
+  if(inst == 751) VC <- 0.143#
+  if(inst == 989) VC <- 0.149#
+#
+#
+#
+ALL[which(ALL$corr == 2500),'col'] <- 1#
+ALL[which(ALL$corr == 5000),'col'] <- 2#
+ALL[which(ALL$corr == 7500),'col'] <- 3#
+ALL[which(ALL$corr == 10000),'col'] <- 4#
+
+head(ALL)#
+
+### DEEPDOM#
+par(mfrow=c(2,2),cex=1.2)#
+plot(ALL$time, ALL[,'pro'], col=ALL[,'col'], main="pro")#
+  points(influx[,"time"],influx[,5],pch=1, cex=2, col='darkgrey')#
+plot(ALL$time, ALL[,'syn'], col=ALL[,'col'], main="syn")#
+  points(influx[,"time"],influx[,6],pch=1, cex=2, col='darkgrey')#
+plot(ALL$time, ALL[,'pico'], col=ALL[,'col'], main="pico")#
+  points(influx[,"time"],influx[,7],pch=1, cex=2, col='darkgrey')#
+
+  influx#
+
+#
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+
+influx#
+
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+id <- unique(findInterval(influx$time_HST, sfl$date))#
+  list <- sfl[id,"file"]#
+
+list#
+
+unique(influx[,'file'])#
+
+library(popcycle)#
+setwd("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/seaflow")#
+
+library(ssPopModel)#
+
+load("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/divrates/prochlorococcus/size.distribution_Prochlorococcus")#
+Vhist <- distribution[[1]]#
+plot.size.distribution(Vhist , mode='log')#
+
+Vhist#
+
+load("size.distribution_Prochlorococcus_HIRES")#
+plot.size.distribution(distribution[[1]], mode="log")#
+#
+
+load("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/divrates/size.distribution_Prochlorococcus_HIRES")#
+
+plot.size.distribution(distribution[[1]], mode="log")#
+
+load("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/divrates/size.distribution_Prochlorococcus_LOWRES")#
+#
+plot.size.distribution(distribution[[1]], mode="log")#
+
+load("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/divrates/prochlorococcus/size.distribution_Prochlorococcus")#
+Vhist <- distribution[[1]]#
+plot.size.distribution(Vhist , mode='log')#
+
+write.csv(distribution[[1]], "~/Desktop/Freq.distribution_Prochlorococcus.csv", quote=F, row.names=T)#
+
+Vhist <- distribution[[2]]#
+plot.size.distribution(Vhist , mode='log')#
+
+write.csv(distribution[[2]], "~/Desktop/Size.distribution_Prochlorococcus.csv", quote=F, row.names=T)#
+
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+
+influx$time_HST#
+
+unique(influx$time_HST)#
+
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+
+influx #
+
+ist#
+
+influx <- read.csv("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/Influx/all_station_curated.csv")#
+  influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+  influx <- subset(influx, Depth_m < 16)#
+sfl <- get.sfl.table("~/Documents/DATA/SeaFlow/SCOPE/Gradients/Gradient-1.0/SeaFlow/KOK1606.db")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+id <- unique(findInterval(influx$time_HST, sfl$date))#
+  list <- sfl[id,"file"]#
+
+  list #
+
+#
+# DEEPDOM#
+influx <- read.delim("~/Documents/DATA/SeaFlow/DeepDOM/influx/surface_samples_metadata.tab")#
+  influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
+  influx <- influx[order(influx$time), ]#
+sfl <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/seaflow/sfl.csv")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+#
+  ALL <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/COMPinflux-seaflow.csv")#
+  id2 <- match(ALL[,'file'],sfl[,"file"])#
+  ALL$time <- sfl[id2, 'date']#
+  ALL <- ALL[order(ALL$time), ]#
+
+ALL#
+
+influx <- read.delim("~/Documents/DATA/SeaFlow/DeepDOM/influx/surface_samples_metadata.tab")#
+  influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
+  influx <- influx[order(influx$time), ]#
+sfl <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/seaflow/sfl.csv")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+
+influx#
+
+nrow(influx)#
+
+influx <- read.delim("~/Documents/DATA/SeaFlow/DeepDOM/influx/surface_samples_metadata.tab")#
+  influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
+sfl <- read.csv("~/Documents/DATA/SeaFlow/DeepDOM/seaflow/sfl.csv")#
+  sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+id <- findInterval(influx$time, sfl$date)#
+list <- sfl[id,"file"]#
+
+list #
+
+set.wk("~/Documents/DATA/SeaFlow/Calibration/cruise_calibration")#
+
+setwd("~/Documents/DATA/SeaFlow/Calibration/cruise_calibration")#
+
+  cruise <- allcruises[1]#
+
+allcruises <- c("SCOPE6", "DeepDOM", "MBARI1","Gradient1")#
+
+  cruise <- allcruises[1]#
+
+cruise#
+
+  #
+  if(cruise == "SCOPE6") inst <- 740 #
+  if(cruise == "DeepDOM" | cruise == "MBARI1") inst <- 989#
+  if(cruise == "Gradient1") inst <- 751 #
+#
+
+inst#
+
+  slopes <- read.csv("~/Documents/DATA/SeaFlow/Calibration/bead_calibration/seaflow_filter_MERGED_slopes.csv")#
+    notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+    notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+    notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+    notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+    intersect.small.D1 <- slopes[slopes$ins== inst,'intersect.small.D1']#
+    intersect.small.D2 <- slopes[slopes$ins== inst,'intersect.small.D2']#
+    intersect.large.D1 <- slopes[slopes$ins== inst,'intersect.large.D1']#
+    intersect.large.D2 <- slopes[slopes$ins== inst,'intersect.large.D2']#
+
+paste0(cruise,"data/stat.csv")#
+
+  stat <- read.csv(paste0(cruise,"data/stat.csv"))#
+
+  stat <- read.csv(paste0(cruise,"data/stats.csv"))#
+
+  beads <- subset(stat, pop == 'beads')#
+
+    plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+
+head(beads)#
+
+  if(cruise == "SCOPE6") plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y');abline(h=beads.fsc, col=2)#
+
+    beads$time <- as.POSIXct(beads$time)#
+
+    plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+    abline(h=beads.fsc, col=2)#
+
+beads$fsc_small#
+
+library(popcycle)#
+setwd("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/seaflow")#
+#
+cruise <- "SCOPE_6"#
+db <- paste0(cruise, ".db")#
+
+setwd("~/Documents/DATA/SeaFlow/SCOPE/SCOPE_6/seaflow")#
+library(ssPopModel)#
+library(popcycle)#
+cruise <- "SCOPE_6"#
+db <- paste0(cruise, ".db")#
+#
+popname <- 'prochloro'#
+time.interval <- 60#
+param <- "fsc_small"#
+n.breaks <- 57#
+#
+stat <- get.stat.table(db)#
+        phyto.stat <- subset(stat, pop == popname)#
+        phyto.stat$time <- as.POSIXct(phyto.stat$time,format="%FT%T",tz='GMT')#
+        time.range <- range(phyto.stat$time)#
+#
+        time <- seq(time.range[1],time.range[2] , by=60*time.interval) # cut the time series according to time interval#
+        time <- seq(time[76], time[124], by=60*time.interval)#
+        # Get the range of 'param' for 'phyto'#
+        print(paste("obtaining the range in", param, "for", popname, 'be patient, this can take several minutes depending of the amount of particles'))#
+        param.phyto <- get.opp.by.date(db=db, opp.dir, time.range[1],time.range[2], pop=popname, channel=param)#
+#
+        plot(density(param.phyto$fsc_small, n.breaks=n.breaks))#
+#
+#
+#
+        param.range <- range(param.phyto)#
+#
+#
+        ##########################
+        ### SMOOTH bead signal  ####
+        ##########################
+#
+        # Get the beads data#
+         print(paste("obtaining the median ", param, "of beads for normalization"))#
+         m.beads <- median(subset(stat, pop =='beads' & time > time.range[1] & time < time.range[2])[,param])#
+
+ m.beads#
+
+subset(stat, pop =='beads' & time > time.range[1] & time < time.range[2])#
+
+paste0(cruise,"data/stats.csv")#
+
+  stat <- read.csv(paste0(cruise,"data/stats.csv"))#
+
+  cruise <- allcruises[1]#
+
+setwd("~/Documents/DATA/SeaFlow/Calibration/cruise_calibration")#
+
+  stat <- read.csv(paste0(cruise,"data/stats.csv"))#
+
+head(stat)#
+
+  beads <- subset(stat, pop == 'beads')#
+
+  beads #
+
+  beads <- subset(stat, pop == 'beads')#
+
+  beads.fsc <- median(beads$fsc_small)#
+
+    beads$time <- as.POSIXct(beads$time)#
+    plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+    abline(h=beads.fsc, col=2)#
+
+  if(cruise == "SCOPE6") list <- list.file(, "00-00$",full.names=T, recursive=T)#
+
+  if(cruise == "SCOPE6") list <- list.files(, "00-00$",full.names=T, recursive=T)#
+
+list#
+
+list.files(paste0(cruise,"data"), "00-00$",full.names=T, recursive=T)#
+
+  if(cruise == "SCOPE6") list <- list.files(paste0(cruise,"data"), "00-00$",full.names=T, recursive=T)#
+
+  print(list[2])#
+
+  evt <- readSeaflow(file,transform=F)#
+
+list#
+
+paste0("./",file)#
+
+path <- "~/Documents/DATA/SeaFlow/Calibration/cruise_calibration/"#
+
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+
+ list <- list.files(paste0(path,cruise,"data"), "00-00$",full.names=T, recursive=T)#
+
+ist#
+
+list#
+
+file <- list[3]#
+
+  print(file)#
+
+  evt <- readSeaflow(file,transform=F)#
+
+paste0(path,cruise,"influx-seaflow.csv")#
+
+cruise <- allcruises[2]#
+
+  # BEADS#
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+  beads <- subset(stat, pop == 'beads')#
+  beads.fsc <- median(beads$fsc_small)#
+
+head(beads)#
+
+  plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+
+      abline(h=beads.fsc, col=2)}#
+
+abline(h=beads.fsc, col=2)#
+
+beads.fsc #
+
+list.files(paste0(path,cruise,"data"), ".evt",full.names=T, recursive=T#
+
+)#
+
+cruise <- allcruises[3]#
+
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+  beads <- subset(stat, pop == 'beads')#
+  beads.fsc <- median(beads$fsc_small)#
+
+head(stat)#
+
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+
+head(stat)#
+
+  beads <- subset(stat, pop == 'beads')#
+
+head(beads)#
+
+untransformData(beads$fsc_small)#
+
+10^((beads$fsc_small)/2^16)*3.5)#
+
+10^((beads$fsc_small)/2^16)*3.5#
+
+median(10^((beads$fsc_small)/2^16)*3.5)#
+
+(log10(beads$fsc_small)/3.5)*2^16#
+
+beads$fsc_small#
+
+10^((beads$fsc_small)/2^16)*3.5#
+
+10^((beads$fsc_small)/2^16)*4#
+
+10^((65000)/2^16)*3.5#
+
+2^16#
+
+10^(2^16/2^16)*3.5#
+
+10^((2^16/2^16)*3.5)#
+
+10^((beads$fsc_small/2^16)*3.5)#
+
+#
+    if(cruise == "MBARI1"){#
+      beads.fsc <- median(10^((beads$fsc_small/2^16)*3.5))#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)}#
+
+  if(cruise == "MBARI1"){#
+      beads$fsc_small <- 10^((beads$fsc_small/2^16)*3.5) # transform data from LOG to LIN#
+      beads.fsc <- median(beads$fsc_small)#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)}#
+
+cruise <- allcruises[4]#
+
+cruise#
+
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+  beads <- subset(stat, pop == 'beads')#
+
+median(beads$fsc_small) #
+
+  if(cruise == "DeepDOM" | cruise == "Gradient1"){#
+      beads.fsc <- median(beads$fsc_small)#
+      plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+      }#
+
+cruise = "SCOPE6"#
+
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+  beads <- subset(stat, pop == 'beads')#
+
+  beads.fsc <- median(beads$fsc_small) * 1.5#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+
+  beads.fsc#
+
+    beads.fsc <- max(beads$fsc_small)#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+
+print(beads.fsc)#
+
+for(cruise in allcruises){#
+#
+  #cruise <- allcruises[4]#
+#
+  if(cruise == "SCOPE6") inst <- 740#
+  if(cruise == "DeepDOM" | cruise == "MBARI1") inst <- 989#
+  if(cruise == "Gradient1") inst <- 751#
+#
+### SET FILTRATION PARAMETERS#
+  # SLOPES#
+  slopes <- read.csv("~/Documents/DATA/SeaFlow/Calibration/bead_calibration/seaflow_filter_MERGED_slopes.csv")#
+    notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+    notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+    notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+    notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+    intersect.small.D1 <- slopes[slopes$ins== inst,'intersect.small.D1']#
+    intersect.small.D2 <- slopes[slopes$ins== inst,'intersect.small.D2']#
+    intersect.large.D1 <- slopes[slopes$ins== inst,'intersect.large.D1']#
+    intersect.large.D2 <- slopes[slopes$ins== inst,'intersect.large.D2']#
+#
+  # BEADS#
+  stat <- read.csv(paste0(path,cruise,"data/stats.csv"))#
+  beads <- subset(stat, pop == 'beads')#
+#
+    if(cruise == "SCOPE6"){#
+    beads.fsc <- max(beads$fsc_small)#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+      print(beads.fsc)}#
+#
+    if(cruise == "MBARI1"){#
+      beads$fsc_small <- 10^((beads$fsc_small/2^16)*3.5) # transform data from LOG to LIN#
+    beads.fsc <- median(beads$fsc_small)#
+      beads$time <- as.POSIXct(beads$time)#
+      plot(beads$time, beads$fsc_small,ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+      print(beads.fsc)}#
+#
+    if(cruise == "DeepDOM" | cruise == "Gradient1"){#
+    beads.fsc <- median(beads$fsc_small)#
+      plot.time(stat, popname='beads', param='fsc_small',ylim=c(1,10^3.5),log='y')#
+      abline(h=beads.fsc, col=2)#
+      print(beads.fsc)}#
+#
+  # CALCULATE BEADS COORDINATE#
+  beads.d1.small <- round(beads.fsc * notch.small.D1 + intersect.small.D1)#
+  beads.d1.large <- round(beads.fsc * notch.large.D1 + intersect.large.D1)#
+  beads.d2.small <- round(beads.fsc * notch.small.D2 + intersect.small.D2)#
+  beads.d2.large <- round(beads.fsc * notch.large.D2 + intersect.large.D2)#
+#
+}#
+
+paste0(path,cruise,"data/", basename(file),"-corr",corr,".png")#
+
