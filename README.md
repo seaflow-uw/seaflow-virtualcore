@@ -5,4 +5,4 @@ Grey lines represents the 95% IC.
 
 ![alt text](1.bead_calibration/ALL_MERGED_Slopes.png "Coordinates of optimally positioned particles")
 
-### François Ribalet, Jarred Swalwell, Rhonda Morales, Sophie Clayton, Camille Poirier and Alexandra Worden contributed to this project ###
+***François Ribalet, Jarred Swalwell, Rhonda Morales, Sophie Clayton, Camille Poirier and Alexandra Worden contributed to this project***
