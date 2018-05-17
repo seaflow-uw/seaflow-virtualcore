@@ -219,10 +219,9 @@ dev.off()
 ###############
 #### SLOPES ###
 ###############
-library(lmodel2)
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore")
 
-png("/1.bead_calibration/ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)
+png("1.bead_calibration/ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)
 par(mfrow=c(3,2))
 
 SLOPES <- NULL
@@ -230,75 +229,69 @@ SLOPES <- NULL
 for(ins in c(989,751,740)){
 print(ins)
 
-ALL <- read.csv(paste0("/1.bead_calibration/",ins,"-summary.csv"))
-  ALL$pmt <- 'coastal'
-  id <- which((grepl("oligo", ALL$file))==T)
-  ALL[id, "pmt"] <- 'oligo'
-  ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))
-  ALL <- ALL[order(ALL$beads.size),]
+      #ins<- "740"
+    ALL <- read.csv(paste0("1.bead_calibration/",ins,"-summary.csv"))
+      ALL$pmt <- 'coastal'
+      id <- which((grepl("oligo", ALL$file))==T)
+      ALL[id, "pmt"] <- 'oligo'
+      ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))
+      ALL <- ALL[order(ALL$beads.size),]
 
-   df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)
-   ref.o <- subset(df.o, beads.size ==1.00)
-   df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)
-   ref.c <- subset(df.c, beads.size ==1.00)
+       df.o <- subset(ALL, pmt == 'oligo' & beads > 0 & beads.size > 0.18)
+       ref.o <- subset(df.o, beads.size ==1.00)
+       df.c <- subset(ALL, pmt == 'coastal' & beads > 0 & beads.size > 0.18)
+       ref.c <- subset(df.c, beads.size ==1.00)
 
-   if(ins == 740){
-     comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)# [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings
-     comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med)
-     comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)
-     }else{
-     comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)
-     comp.d1 <- mean(df.o$d1.med - df.c$d1.med)
-     comp.d2 <- mean(df.o$d2.med - df.c$d2.med)
-   }
+       if(ins == 740){
+         comp.fsc <- mean(df.o$fsc.med[-1] - df.c$fsc.med)# [-1] to remove data from 0.3 µm beads not analyzed with instrument 740 with Coastal settings
+         comp.d1 <- mean(df.o$d1.med[-1] - df.c$d1.med)
+         comp.d2 <- mean(df.o$d2.med[-1] - df.c$d2.med)
+         }else{
+         comp.fsc <- mean(df.o$fsc.med - df.c$fsc.med)
+         comp.d1 <- mean(df.o$d1.med - df.c$d1.med)
+         comp.d2 <- mean(df.o$d2.med - df.c$d2.med)
+       }
 
-DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), d1=c(df.o$d1.med,df.c$d1.med+comp.d1),d2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
-
-#SMALL
-sm <- subset(DF, size <= 1)
-sm.lm.d1 <- lmodel2(d1 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)
-sm.lm.d2 <- lmodel2(d2 ~ fsc, data=sm, range.x="interval", range.y="interval", nperm=99)
-
-#LARGE
-lg <- subset(DF, size >= 1)
-lg.lm.d1 <- lmodel2(d1 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)
-lg.lm.d2 <- lmodel2(d2 ~ fsc, data=lg, range.x="relative", range.y="relative", nperm=99)
-
-notch.small.D1 <-  round(sm.lm.d1$regression.results$Slope[1],3)
-notch.small.D2 <-  round(sm.lm.d2$regression.results$Slope[1],3)
-notch.large.D1 <-  round(lg.lm.d1$regression.results$Slope[1],3)
-notch.large.D2 <-  round(lg.lm.d2$regression.results$Slope[1],3)
-
-notch.small.D1_97.5 <-  round(sm.lm.d1$confidence.intervals[1,5],3)
-notch.small.D2_97.5 <-  round(sm.lm.d2$confidence.intervals[1,5],3)
-notch.large.D1_97.5 <-  round(lg.lm.d1$confidence.intervals[1,5],3)
-notch.large.D2_97.5 <-  round(lg.lm.d2$confidence.intervals[1,5],3)
-
-notch.small.D1_2.5 <-  round(sm.lm.d1$confidence.intervals[1,4],3)
-notch.small.D2_2.5 <-  round(sm.lm.d2$confidence.intervals[1,4],3)
-notch.large.D1_2.5 <-  round(lg.lm.d1$confidence.intervals[1,4],3)
-notch.large.D2_2.5 <-  round(lg.lm.d2$confidence.intervals[1,4],3)
-
-slope <- data.frame(cbind(ins, notch.small.D1,notch.small.D2,notch.large.D1,notch.large.D2,notch.small.D1_97.5,notch.small.D2_97.5,notch.large.D1_97.5,notch.large.D2_97.5,notch.small.D1_2.5,notch.small.D2_2.5,notch.large.D1_2.5,notch.large.D2_2.5))
-SLOPES <- rbind(SLOPES, slope)
+    DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), D1=c(df.o$d1.med,df.c$d1.med+comp.d1),D2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
+    DF <- DF[order(DF$fsc),]
 
 
-  plot(DF$fsc, DF$d1, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))
-    points(df.c$fsc.med+comp.fsc,df.c$d1.med+comp.d1, col=2)
-    points(ref.o$fsc.med, ref.o$d1.med, pch=16)
-    points(ref.c$fsc.med+comp.fsc, ref.c$d1.med+comp.d1, col=2,pch=16)
-      lines(sm.lm.d1, "OLS"); lines(sm.lm.d1, "OLS",col='blue')
-      lines(lg.lm.d1, "OLS");lines(lg.lm.d1, "OLS",col='green')
+    slope <- NULL
+    for(size in c("small","large")){
+      print(size)
+      if(size == "small" ) sm <- subset(DF, size <= 1)
+      if(size == "large" ) sm <- subset(DF, size >= 1)
 
-  plot(DF$fsc, DF$d2, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins))
-    points(df.c$fsc.med+comp.fsc,df.c$d2.med+comp.d2, col=2)
-    points(ref.o$fsc.med, ref.o$d2.med, pch=16)
-    points(ref.c$fsc.med+comp.fsc, ref.c$d2.med+comp.d2, col=2,pch=16)
-      lines(sm.lm.d2, "OLS"); lines(sm.lm.d2, "OLS",col='blue')
-      lines(lg.lm.d2, "OLS");lines(lg.lm.d2, "OLS",col='green')
+      for(param in c("D1","D2")){
+        reg <- data.frame(cbind(fsc=sm$fsc, predict(lm(sm[,param] ~ fsc, data=sm), newdata=data.frame(fsc=sm$fsc),interval='predict')))
+
+          for(q in c("fit","lwr","upr")){
+            pred <- t(rev(round(lm(reg[,q] ~ fsc, data=reg)$coefficient,3)))
+              if(q == "fit") colnames(pred) <- c(paste0("notch.",size,".",param),paste0("intersect.",size,".",param))
+              if(q == "lwr") colnames(pred) <- c(paste0("notch.",size,".",param,"_2.5"),paste0("intersect.",size,".",param,"_2.5"))
+              if(q == "upr") colnames(pred) <- c(paste0("notch.",size,".",param,"_97.5"),paste0("intersect.",size,".",param,"_97.5"))
+            slope <- data.frame(cbind(slope, pred))
+          }
+        }
+      }
+
+
+
+      for(param in c("D1","D2")){
+        col <- c("red3",rep('grey',2),"seagreen3",rep('grey',2))
+        plot(DF$fsc, DF[,param], xlim=c(0,62000), ylim=c(0,62000),main=paste(ins), ylab=paste(param), xlab="FSC",cex=1.4)
+          s <- grep(param, colnames(slope))
+            c <- 1
+            for(i in s[seq(1,length(s),by=2)]){
+                abline(b=slope[,i],a=slope[,i+1], lwd=2, col=col[c])
+                c <- c+1}
+              }
+
+  slope <- data.frame(cbind(ins=ins, slope))
+  SLOPES <- rbind(SLOPES, slope)
 
 }
 
 dev.off()
 
-write.csv(SLOPES, "/1.bead_calibration/seaflow_filter_MERGED_slopes.csv", quote=F, row.names=F)
+write.csv(SLOPES, "1.bead_calibration/seaflow_filter_slopes.csv", quote=F, row.names=F)
