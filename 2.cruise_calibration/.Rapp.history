@@ -1,85 +1,3 @@
-head(df.mean)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df.mean)
-para <- c("fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)#
-      colnames(df.sd) <- paste0(para,".se")
-DF <- cbind(df.mean,df.sd)
-head(DF)
-para <- c("fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)
-head(df.sd)
-df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c("time","population")]
-df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]
-head(df.sd)
-colnames(df.sd) <- paste0(para,".se")
-head(df.sd)
-DF <- cbind(df.mean,df.sd)
-head(DF)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-head(DF)
-DF <- cbind(stat$file, df.mean,df.sd)
-nrow(df)
-nrow(df.mean)
-DF <- cbind(unique(stat$file), df.mean,df.sd)
-head(df.mean)
-head(df.mean,50)
-nrow(df)
-nrow(df.mean)
-para <- colnames(stat)[-c(2,13,21,23,25,27,29)]
-df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df.mean)
-df.mean$file <- stat[findInterval(df.mean$time, stat$time),"file"]
-findInterval(df.mean$time, stat$time)
-para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df)
-match(df.mean$time, stat$time)
-df.mean$file <- stat[match(df.mean$time, stat$time),"file"]
-head(df.mean)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd[,-c(1,2)])
-head(DF)
-para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-head(DF)
-tail(DF)
 DF <- DF[order(DF$time),]
 head(DF)
 df.sd <- df.sd/sqrt(6) # Calculate SE from SD
@@ -1075,154 +993,2866 @@ par(mfrow=c(4,2))#
 sqrt(1.5^2 + 4^2)
 library(popcycle)#
 library(dplyr)#
-cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3", "seagreen3", "yellow", "orangered2", "darkred"))
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
-DF <- read.csv("SeaFlowInflux_comparison.csv")#
-DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
-DF.a$cruise <- DF.a$Group.1#
+cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3", "seagreen3", "yellow", "orangered2", "darkred"))#
+##########################################
+## 0. DOWNLOAD THE RAW DATA using DAT ####
+##########################################
+dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63#
 #
-VC <- NULL#
-par(mfrow=c(4,3),cex=1.2)#
-for(c in unique(DF$cruise)){#
-  print(c)#
-    df <- subset(DF.a, cruise == c)#
-    for (phyto in c('pro','syn','pico')){#
-      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
-      for(s in 1:4){#
-        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
-        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
-        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
-        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
-        vc <- data.frame(cbind(each, median))#
-        vc$cruise <- c#
-        vc$phyto <- phyto#
-        vc$vc.method <- s#
-        VC <- rbind(VC, vc)#
-        }#
-    }#
-  }#
- met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
- best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))
+#Path to the raw data (DAT)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"#
+#####################################
+### 1. SET FILTRATION PARAMETERS ####
+#####################################
+df <- c("MBARI1",47814,24114,22436,#
+"SCOPE6",49664,16840,17669,#
+"DeepDOM",48977,19167,19617,#
+"Gradient1",51625,34693,33630)#
+beads.coord <- data.frame(matrix(df, 4,4, byrow=T),stringsAsFactors=F)#
+colnames(beads.coord) <- c("cruise","fsc","d1","d2")#
+#Path to the Git repository#
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
-DF <- read.csv("SeaFlowInflux_comparison.csv")#
-DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
-DF.a$cruise <- DF.a$Group.1#
+gate <- FALSE#
+allcruises <- c("SCOPE6", "DeepDOM", "MBARI1","Gradient1")#
 #
-VC <- NULL#
-par(mfrow=c(4,3),cex=1.2)#
-for(c in unique(DF$cruise)){#
-  print(c)#
-    df <- subset(DF.a, cruise == c)#
-    for (phyto in c('pro','syn','pico')){#
-      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
-      for(s in 1:4){#
-        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
-        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
-        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
-        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
-        vc <- data.frame(cbind(each, median))#
-        vc$cruise <- c#
-        vc$phyto <- phyto#
-        vc$vc.method <- s#
-        VC <- rbind(VC, vc)#
-        }#
-    }#
-  }#
- met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
- best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))
-par(mfrow=c(4,3),cex=1.2)#
- for(c in unique(DF$cruise)){#
-   print(c)#
-     df <- subset(DF.a, cruise == c)#
-     for (phyto in c('pro','syn','pico')){#
-       plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c), xlim=c(0,10000))#
-         s <- best.vc.method#
-         if(phyto == 'pro'){#
-           points(df$corr, df[,paste0(phyto, ".diff.each",s)])#
-           id <- which(df[,paste0(phyto, ".diff.each",s)]==min(df[,paste0(phyto, ".diff.each",s)]))#
-           points(df$corr[id], df[id,paste0(phyto, ".diff.each",s)],pch=21, bg=2)#
-              }#
-         else{#
-           points(df$corr, df[,paste0(phyto, ".diff.median",s)])#
-           id <- which(df[,paste0(phyto, ".diff.median",s)]==min(df[,paste0(phyto, ".diff.median",s)]))#
-           points(df$corr[id], df[id,paste0(phyto, ".diff.median",s)],pch=21, bg=2)#
-         }#
+for(cruise in allcruises){#
+#
+  #cruise <- allcruises[1]#
+#
+  print(cruise)#
+  ### Get EVT list#
+  if(cruise == "SCOPE6" | cruise == "Gradient1") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)#
+  if(cruise == "DeepDOM"| cruise == "MBARI1") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)#
+#
+  if(cruise == "SCOPE6") inst <- 740#
+  if(cruise == "DeepDOM" | cruise == "MBARI1") inst <- 989#
+  if(cruise == "Gradient1") inst <- 751#
+#
+  # SLOPES#
+  slopes <- read.csv("seaflow_filter_slopes.csv")#
+#
+  # BEADS#
+  beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"fsc"])#
+  beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d1"])#
+  beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d2"])#
+#
+width <- 2500#
+ALL <- NULL#
+#
+for (file in list){#
+#
+  #file <- list[4]#
+  print(file)#
+#
+  evt <- readSeaflow(file,transform=F)#
+#
+  # Filtering noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+    if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)#
+      } else aligned. <- aligned#
+#
+    if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)#
+      } else df <- evt.#
+    # par(mfrow=c(2,2))#
+    # plot.cytogram(df, "D1", "D2"); abline(b=notch, a=origin)#
+    # plot.cytogram(aligned., "D1", "D2"); abline(b=1, a=origin)#
+    # plot.cytogram(df, "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)#
+    # plot.cytogram(df, "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)#
+#
+    screening <- c(-12500,-10000,-7500,-5000,-2500,0,2500,5000,7500,10000,12500, 1, 2, 3)#
+#
+  for(corr in screening){#
+#
+  print(paste("corr=", corr))#
+  notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+  notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+  notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+  notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+  offset.small.D1 <- round(beads.d1 - notch.small.D1 * beads.fsc) + corr#
+  offset.small.D2 <- round(beads.d2 - notch.small.D2 * beads.fsc) + corr#
+  offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + corr#
+  offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + corr#
+    if(corr == 1){#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+      notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
       }#
-  }
-best.vc.method
+#
+    if(corr == 2){#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      notch.small.D1 <- beads.d1/beads.fsc#
+      notch.small.D2 <- beads.d2/beads.fsc#
+      }#
+#
+    if(corr == 3){#
+        if(offset.small.D1 < 0 | offset.small.D2 < 0){#
+                    offset.small.D1 <- 0#
+                    offset.small.D2 <- 0#
+                    notch.small.D1 <- beads.d1/beads.fsc#
+                    notch.small.D2 <- beads.d2/beads.fsc}#
+        }#
+#
+      opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+        D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+      if(nrow(opp) < 10) next#
+#
+      opp$pop <- 0#
+      opp. <- subset(opp, fsc_small > 1)#
+#
+      print("Beads")#
+        if(gate) {plot.cytogram(opp , "fsc_small", "pe")#
+                        poly.beads <- getpoly(quiet=TRUE)#
+                        write.csv(poly.beads,paste0(cruise,"data/", basename(file),"-polybeads.csv"),quote=F, row.names=F)#
+                      }#
+        poly.beads <-  read.csv(paste0(cruise,"data/", basename(file),"-polybeads.csv"))#
+        b <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+        opp[row.names(b),'pop'] <- "beads"#
+#
+      print("Syn")#
+        if(gate) {poly.syn <- getpoly(quiet=TRUE)#
+                        write.csv(poly.syn,paste0(cruise,"data/", basename(file),"-polysyn.csv"),quote=F, row.names=F)#
+                      }#
+        poly.syn <-  read.csv(paste0(cruise,"data/", basename(file),"-polysyn.csv"))#
+        s <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.syn, bound=TRUE, quiet=TRUE))#
+        opp[row.names(s),'pop'] <- "synecho"#
+#
+      print("Pro")#
+      x <- subset(opp, pop==0)#
+        if(gate){plot.cytogram(opp , "fsc_small", "chl_small")#
+                        poly.pro <- getpoly(quiet=TRUE)#
+                        write.csv(poly.pro,paste0(cruise,"data/", basename(file),"-polypro.csv"),quote=F, row.names=F)#
+                      }#
+        poly.pro <-  read.csv(paste0(cruise,"data/", basename(file),"-polypro.csv"))#
+        p <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pro, bound=TRUE, quiet=TRUE))#
+        opp[row.names(p),'pop'] <- "prochloro"#
+#
+      print("Pico")#
+      x <- subset(opp, pop==0)#
+      if(gate) { poly.pico <- getpoly(quiet=TRUE)#
+                      write.csv(poly.pico,paste0(cruise,"data/", basename(file),"-polypico.csv"),quote=F, row.names=F )#
+                    }#
+      poly.pico <-  read.csv(paste0(cruise,"data/", basename(file),"-polypico.csv"))#
+      l <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pico, bound=TRUE, quiet=TRUE))#
+      opp[row.names(l),'pop'] <- "pico"#
+    if(corr == 10000 | corr == -10000 | corr == 1 | corr == 2| corr == 3){#
+          png(paste0(cruise,"data/", basename(file),"-offset",corr,".png"),width=9, height=12, unit='in', res=100)#
+#
+          if(nrow(opp)> 100000){opp. <- sample_n(opp, 100000)#
+             } else opp. <- opp#
+          par(mfrow=c(2,2))#
+          plot.cytogram(aligned. ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)#
+          plot.cytogram(aligned. , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)#
+          plot.vct.cytogram(opp. , "fsc_small", "pe")#
+          plot.vct.cytogram(opp. , "fsc_small", "chl_small")#
+#
+          dev.off()#
+      }#
+#
+      n.opp <- nrow(opp)#
+      n.opp. <- nrow(opp.)#
+      n.evt <- nrow(evt)#
+      n.evt. <- nrow(evt.)#
+      beads <- nrow(b)#
+      syn <- nrow(s)#
+      pro <- nrow(p)#
+      pico <- nrow(l)#
+      filename <- basename(file)#
+      if(cruise == 'MBARI1' | cruise == 'DeepDOM') filename <- paste(basename(dirname(file)),basename(file),sep="/")#
+#
+      all <- data.frame(cbind(file=filename, n.opp, n.opp., n.evt, n.evt., beads, pro, syn, pico, offset.small.D1, offset.large.D1,offset.small.D2, offset.large.D2, width, corr))#
+#
+      ALL <- rbind(ALL, all)#
+#
+    }#
+  }#
+#
+write.csv(ALL, paste0(cruise,"data/seaflow-summary.csv"), quote=F, row.names=F)#
+}
+###################
+### 2. SUMMARY ####
+###################
+library(lattice)#
+library(lmodel2)#
+#
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+#
+allcruises <- c("SCOPE6", "DeepDOM", "MBARI1","Gradient1")#
+cruise <- allcruises[1]#
+DF <- NULL#
+for(cruise in allcruises){#
+#
+print(cruise)#
+#
+### SFL + INFLUX#
+if(cruise == 'DeepDOM'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
+                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+                      influx <- read.delim(paste0(cruise,"data/surface_samples_metadata.tab"))#
+                        influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
+                        }#
+if(cruise == 'Gradient1'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
+                            sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+                            sfl$file <- basename(as.character(sfl$file))#
+                          influx <- read.csv(paste0(cruise,"data/all_station_curated.csv"))#
+                            influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
+                            influx <- influx[order(influx$time_HST), ]#
+                            influx <- subset(influx, Depth_m < 16)#
+                            pro <- subset(influx, population == 'prochloro')#
+                            syn <- subset(influx, population == 'synecho')#
+                            picoeuk <- subset(influx, population == 'picoeuk')#
+                          influx <- data.frame(cbind(time=pro$time_HST, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance))#
+                            influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")#
+                              }#
+if(cruise == 'MBARI1'){sfl <- read.delim(paste0(cruise,"data/cruise.sfl"))#
+                        sfl$date <- as.POSIXct(sfl$DATE, format = "%FT%T", tz = "GMT")#
+                        sfl$file <- sfl[,"FILE"]#
+                        sfl$flow_rate <- sfl[,"FLOW.RATE"]#
+                      influx <- read.csv(paste0(cruise,"data/mbari_summary.csv"))#
+                        id <- match(influx[,'file'],sfl[,"FILE"])#
+                        influx$time <- sfl[id, 'date']#
+                        influx$pro <- influx$pro / 1000#
+                        influx$syn <- influx$syn / 1000#
+                        influx$pico <- influx$picoeuks / 1000#
+                          }#
+if(cruise == 'SCOPE6'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
+                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
+                        sfl$flow_rate <- median(sfl$flow_rate, na.rm=T)#
+                        sfl$file <- basename(as.character(sfl$file))#
+                      influx <- read.csv(paste0(cruise,"data/influx.csv"))#
+                        influx$time <- as.POSIXct(influx$time, tz="GMT")#
+                        pro <- subset(influx, pop == 'prochloro')#
+                        syn <- subset(influx, pop == 'synecho')#
+                        picoeuk <- subset(influx, pop == 'picoeuk')#
+                        crocco <- subset(influx, pop == 'crocco')#
+                          influx <- data.frame(cbind(time=pro$time, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance+crocco$abundance))#
+                          influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")#
+                        }#
+influx <- influx[order(influx$time), ]#
+#
+### SEAFLOW#
+ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))#
+#
+if(cruise == "Gradient1") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]#
+if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]#
+#
+  ALL$cruise <- cruise#
+  id2 <- match(ALL[,'file'],as.character(sfl[,"file"]))#
+  ALL$time <- sfl[id2, 'date'] # add time#
+    ALL <- ALL[order(ALL$time), ]#
+  ALL$fr <- sfl[id2, 'flow_rate'] # add flow rate#
+#
+  # add abundance from INFLUX#
+  id <- findInterval(ALL$time,influx$time)#
+  if(cruise =="DeepDOM"| cruise == "Gradient1") id <- id +1#
+  for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]#
+  ############### TEST different VC method ####################################
+  ALL$vc1 <- 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1#
+  ALL$vc2 <- 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2#
+  ALL$vc3 <- 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3#
+  ALL$vc4 <- 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4#
+  # calculate abundance from Seaflow#
+  for (phyto in c('pro','syn','pico')){#
+      ALL[,paste0(phyto,'.seaflow.each1')] <- ALL[,phyto] / ALL$vc1#
+      ALL[,paste0(phyto,'.seaflow.median1')] <- ALL[,phyto] / median(ALL$vc1)#
+      ALL[,paste0(phyto,'.seaflow.each2')] <- ALL[,phyto] / ALL$vc2#
+      ALL[,paste0(phyto,'.seaflow.median2')] <- ALL[,phyto] / median(ALL$vc2)#
+      ALL[,paste0(phyto,'.seaflow.each3')] <- ALL[,phyto] / ALL$vc3#
+      ALL[,paste0(phyto,'.seaflow.median3')] <- ALL[,phyto] / median(ALL$vc3)#
+      ALL[,paste0(phyto,'.seaflow.each4')] <- ALL[,phyto] / ALL$vc4#
+      ALL[,paste0(phyto,'.seaflow.median4')] <- ALL[,phyto] / median(ALL$vc4)#
+      }#
+#
+          # par(mfrow=c(3,1),cex=1.2)#
+          # for (phyto in c('pro','syn','pico')){#
+          #         plot(ALL[,'time'],ALL[,paste0(phyto,'.influx')],ylim=c(0,2*max(ALL[,paste0(phyto,'.influx')])),type='o', ylab="abundance", xlab=NA, main=paste(phyto))#
+          #         for(s in 1:4){#
+          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.each',s)],col=s)#
+          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.median',s)],col=s, pch=2)#
+          #           }#
+          #         }#
+#
+    # calculate error between seaflow-based and influx-based abundance#
+    for (phyto in c('pro','syn','pico')){#
+      for(s in 1:4){#
+        ALL[,paste0(phyto,".diff.each",s)] <- abs(ALL[,paste0(phyto,'.seaflow.each',s)] - ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]#
+        ALL[,paste0(phyto,".diff.median",s)] <- abs(ALL[,paste0(phyto,'.seaflow.median',s)] -ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]#
+            }#
+      }#
+#
+          # par(mfrow=c(3,1),cex=1.2)#
+          # for (phyto in c('pro','syn','pico')){#
+          #         plot(ALL[,'time'],rep(0, nrow(ALL)),ylim=c(0,1),type='l', ylab="Diff", xlab=NA, main=paste(phyto))#
+          #         for(s in 1:4){#
+          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.each',s)],col=s)#
+          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.median',s)],col=s, pch=2)#
+          #           }#
+          #         }#
+    DF <- rbind(DF,ALL)#
+#
+  }#
+write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
+###################
+### 3. BEST VC ####
+###################
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+DF <- read.csv("SeaflowInflux_comparison.csv")#
+#
+DF$time <- as.POSIXct(DF$time, tz='GMT')#
+DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
+DF.a$cruise <- DF.a$Group.1#
+#
+# add a color for each cruise#
+i <- 1#
+for(cruise in unique(DF$cruise)){#
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
+    i <- i + 1#
+  }#
+VC <- NULL#
+par(mfrow=c(4,3),cex=1.2, pty='m')#
+for(c in unique(DF$cruise)){#
+  print(c)#
+    df <- subset(DF.a, cruise == c)#
+    for (phyto in c('pro','syn','pico')){#
+      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
+      for(s in 1:4){#
+        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
+        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
+        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
+        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
+        vc <- data.frame(cbind(each, median))#
+        vc$cruise <- c#
+        vc$phyto <- phyto#
+        vc$vc.method <- s#
+        VC <- rbind(VC, vc)#
+        }#
+    }#
+  }#
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
+   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
+   print(paste("best VC method is:",best.vc.method))
+###################
+### 3. BEST VC ####
+###################
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+DF <- read.csv("SeaflowInflux_comparison.csv")#
+#
+DF$time <- as.POSIXct(DF$time, tz='GMT')#
+DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
+DF.a$cruise <- DF.a$Group.1#
+#
+# add a color for each cruise#
+i <- 1#
+for(cruise in unique(DF$cruise)){#
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
+    i <- i + 1#
+  }#
+VC <- NULL#
+par(mfrow=c(4,3),cex=1.2, pty='m')#
+for(c in unique(DF$cruise)){#
+  print(c)#
+    df <- subset(DF.a, cruise == c)#
+    for (phyto in c('pro','syn','pico')){#
+      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
+      for(s in 1:4){#
+        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
+        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
+        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
+        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
+        vc <- data.frame(cbind(each, median))#
+        vc$cruise <- c#
+        vc$phyto <- phyto#
+        vc$vc.method <- s#
+        VC <- rbind(VC, vc)#
+        }#
+    }#
+  }#
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
+   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
+   print(paste("best VC method is:",best.vc.method))
+library(scales)#
+#
+s <- best.vc.method#
+REG <- NULL#
 for(offset in unique(DF$corr)){#
-summary <-subset(DF, corr == offset)#
+  df <- subset(DF, corr==offset)#
+  reg.pro <- lm(df[,paste0("pro.seaflow.each",s)] ~ pro.influx, data=df)#
+  reg.syn <- lm(df[,paste0("syn.seaflow.median",s)] ~ syn.influx, data=df)#
+  reg.pico <- lm(df[,paste0("pico.seaflow.median",s)] ~ pico.influx, data=df)#
+  reg <- data.frame(cbind(offset, reg.pro=reg.pro$coefficient[2], reg.syn=reg.syn$coefficient[2], reg.pico=reg.pico$coefficient[2]))#
+  REG <- rbind(REG, reg)#
+}#
+REG$reg.all <- rowMeans(abs(REG[,c("reg.pro", "reg.syn", "reg.pico")]-1))#
+best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']#
+print(paste("best OFFET is:",best.offset))
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==0)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==1)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==2)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==3)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==2)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+REG
+VC
+head(DF)
+head(DF,15)
+DF$offset.small.d1
+DF$offset.small.D1
+dd <- subset(DF, corr ==0)
+head(dd,20)
+dd$offset.small.D1
+tail(dd,20)
+###################
+### 3. BEST VC ####
+###################
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+DF <- read.csv("SeaflowInflux_comparison.csv")#
 #
-par(mfrow=c(3,1),cex=1.2, mar=c(4,4,2,1),pty='s')#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-unique(DF$corr)
+DF$time <- as.POSIXct(DF$time, tz='GMT')#
+DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
+DF.a$cruise <- DF.a$Group.1#
+#
+# add a color for each cruise#
+i <- 1#
+for(cruise in unique(DF$cruise)){#
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
+    i <- i + 1#
+  }#
+VC <- NULL#
+par(mfrow=c(4,3),cex=1.2, pty='m')#
+for(c in unique(DF$cruise)){#
+  print(c)#
+    df <- subset(DF.a, cruise == c)#
+    for (phyto in c('pro','syn','pico')){#
+      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
+      for(s in 1:4){#
+        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
+        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
+        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
+        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
+        vc <- data.frame(cbind(each, median))#
+        vc$cruise <- c#
+        vc$phyto <- phyto#
+        vc$vc.method <- s#
+        VC <- rbind(VC, vc)#
+        }#
+    }#
+  }#
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
+   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
+   print(paste("best VC method is:",best.vc.method))
+library(scales)#
+#
+s <- best.vc.method#
+REG <- NULL#
 for(offset in unique(DF$corr)){#
-summary <-subset(DF, corr == offset)#
+  df <- subset(DF, corr==offset)#
+  reg.pro <- lm(df[,paste0("pro.seaflow.each",s)] ~ pro.influx, data=df)#
+  reg.syn <- lm(df[,paste0("syn.seaflow.median",s)] ~ syn.influx, data=df)#
+  reg.pico <- lm(df[,paste0("pico.seaflow.median",s)] ~ pico.influx, data=df)#
+  reg <- data.frame(cbind(offset, reg.pro=reg.pro$coefficient[2], reg.syn=reg.syn$coefficient[2], reg.pico=reg.pico$coefficient[2]))#
+  REG <- rbind(REG, reg)#
+}#
+REG$reg.all <- rowMeans(abs(REG[,c("reg.pro", "reg.syn", "reg.pico")]-1))#
+best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']#
+print(paste("best OFFET is:",best.offset))
+REG
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==2)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==1)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==2)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==3)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==2)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==3)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+png(paste0("SeaFlowInflux-comparison.png"),width=12, height=15, unit='in', res=500)#
 #
-par(mfrow=c(3,13),cex=1.2, mar=c(4,4,2,1),pty='s')#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-par(mfrow=c(3,13),cex=1.2, mar=c(4,4,2,1),pty='s')#
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)#
 #
-for(offset in unique(DF$corr)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-par(mfrow=c(3,13),cex=1.2,pty='s')
-for(offset in unique(DF$corr)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-par(mfrow=c(5,3),cex=1.2,pty='s')#
+dev.off()
+df3 <- subset(DF, corr==3)#
+df2 <- subset(DF, corr==2)
+plot(df2[,"pro.seaflow.each2"],df3[,"pro.seaflow.each2"] )
+plot(df2[,"syn.seaflow.median2"],df3[,"syn.seaflow.median2"] )
+plot(df2[,"pico.seaflow.median2"],df3[,"pico.seaflow.median2"] )
+REG
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)]/2, xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)]/2, log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)]/2, xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)]/2, log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)]/2, xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)]/2,log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)
+png(paste0("SeaFlowInflux-comparison.png"),width=12, height=15, unit='in', res=500)#
 #
-for(offset in C(-5000,-2500,0,2500,5000)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-par(mfrow=c(5,3),cex=1.2,pty='s')#
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370)); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150)); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150)); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50)); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50)); abline(b=1, a=0, lty=2)#
 #
-for(offset in c(-5000,-2500,0,2500,5000)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-}
-for(offset in c(-5000,-2500,0,2500,5000)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy', main="pro"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy',main="syn"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy',main="pico"); abline(b=1,a=0,lwd=2,col='grey')#
-}
-for(offset in c(0,2500,5000,7500,10000)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy', main="pro"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy',main="syn"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy',main="pico"); abline(b=1,a=0,lwd=2,col='grey')#
-}
-summary <-subset(DF, corr == 5000)#
+dev.off()
+#' Plot helpful cytograms for estimating the D1, D2 and FSC coordinates of the inflection point (corresponds to location of 1µm beads).#
+#'#
+#' @param dataframe containing EVT data.#
+#' @return D1, D2 and fsc values of presumed 1 µm beads#
+#' @export#
+inflection.point <- function(DF){#
 #
-#png(paste0("SeaFlowInflux-compALL",s,".png"),width=6, height=12, unit='in', res=100)#
-  par(mfrow=c(3,1),cex=1.2, mar=c(4,4,2,1),pty='s')#
-  plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-  plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-  plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy'); abline(b=1,a=0,lwd=2,col='grey')#
-#dev.off()
-par(mfrow=c(5,3),cex=1.2,pty='s')#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+  par(mfrow=c(1,3),pty='s')#
 #
-for(offset in c(0,2500,5000,7500,10000)){#
-summary <-subset(DF, corr == offset)#
-plot(summary[,'pro.seaflow.each2'],summary[,'pro.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(50,500), xlim=c(50,500) ,log='xy', main="pro"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'syn.seaflow.median2'],summary[,'syn.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,200), xlim=c(0.5,200), log='xy',main="syn"); abline(b=1,a=0,lwd=2,col='grey')#
-plot(summary[,'pico.seaflow.median2'],summary[,'pico.influx'],asp=1,ylab="Influx", xlab="SeaFlow",col=summary[,'cruise'], pch=16, ylim=c(0.5,100), xlim=c(0.5,100), log='xy',main="pico"); abline(b=1,a=0,lwd=2,col='grey')#
+  plot.cytogram(DF, "fsc_small", "pe")#
+    poly.beads <- getpoly(quiet=TRUE)#
+    b <- subset(DF,inout(DF[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+#
+  plot.cytogram(DF, "fsc_small", "D1");points(b$fsc_small, b$D1,col=2, pch = 16, cex = 0.5)#
+      polyd1 <- getpoly(quiet=TRUE)#
+#
+  plot.cytogram(DF, "fsc_small", "D2");points(b$fsc_small, b$D2,col=2,pch = 16, cex = 0.5)#
+      polyd2 <- getpoly(quiet=TRUE)#
+#
+      fsc <- round(mean(c(polyd1[,1], polyd2[,1])))#
+      d1 <- round(mean(polyd1[,2]))#
+      d2 <- round(mean(polyd2[,2]))#
+      inflection <- data.frame(fsc, d1, d2)#
+#
+  par(def.par)#
+#
+  return(inflection)#
+}#
+#
+#' Get Notch and Offset values for Filter.notch function.#
+#'#
+#' @param inst Instrument serial number#
+#' @param fsc Small forward scatter value of 1 µm beads#
+#' @param d1 D1 value of 1 µm beads#
+#' @param d2 D2 value of 1 µm beads#
+#' @param slopes User-supplied filter slope CSV file, overriding the installed#
+#'   default file.#
+#' @return Data frame with filtering parameters for 2.5, 50.0, 97.5 quantiles#
+#' @examples#
+#' \dontrun{#
+#' filt <- create.filter.params(inst, fsc, d1, d2)#
+#' }#
+#' @export#
+create.filter.params <- function(inst, fsc, d1, d2, slope.file=NULL) {#
+  # Rename to get correct dataframe headers#
+  beads.fsc.small <- as.numeric(fsc)#
+  beads.D1 <- as.numeric(d1)#
+  beads.D2 <- as.numeric(d2)#
+#
+  width <- 2500#
+#
+  if (is.null(slope.file)) {#
+    slope.file <- system.file("filter", "seaflow_filter_slopes.csv",package='popcycle')#
+  }#
+  slopes <- read.csv(slope.file)#
+#
+  filter.params <- data.frame()#
+  headers <- c("quantile", "beads.fsc.small",#
+               "beads.D1", "beads.D2", "width",#
+               "notch.small.D1", "notch.small.D2",#
+               "notch.large.D1", "notch.large.D2",#
+               "offset.small.D1", "offset.small.D2",#
+               "offset.large.D1", "offset.large.D2")#
+#
+  for (quantile in QUANTILES) {#
+    if (quantile == 2.5) {#
+      suffix <- "_2.5"#
+    } else if (quantile == 97.5) {#
+      suffix <- "_97.5"#
+    } else if (quantile == 50.0) {#
+      suffix <- ""#
+    }#
+#
+    notch.small.D1 <- slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)]#
+    notch.small.D2 <- slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)]#
+    notch.large.D1 <- slopes[slopes$ins== inst, paste0('notch.large.D1', suffix)]#
+    notch.large.D2 <- slopes[slopes$ins== inst, paste0('notch.large.D2', suffix)]#
+    offset.small.D1 <- round(beads.D1 - notch.small.D1 * beads.fsc.small)#
+    offset.small.D2 <- round(beads.D1 - notch.small.D2 * beads.fsc.small)#
+    offset.large.D1 <- round(beads.D1 - notch.large.D1 * beads.fsc.small)#
+    offset.large.D2 <- round(beads.D2 - notch.large.D2 * beads.fsc.small)#
+#
+    if(notch.small.D1 < 0 | notch.small.D2 < 0){#
+      notch.small.D1 <- beads.D1/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)] / slopes[slopes$ins== inst, 'notch.small.D1']#
+      notch.small.D2 <- beads.D2/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)] / slopes[slopes$ins== inst, 'notch.small.D2']#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      }#
+#
+    newrow <- data.frame(quantile, beads.fsc.small,#
+                         beads.D1, beads.D2, width,#
+                         notch.small.D1, notch.small.D2,#
+                         notch.large.D1, notch.large.D2,#
+                         offset.small.D1, offset.small.D2,#
+                         offset.large.D1, offset.large.D2,#
+                         stringsAsFactors=FALSE)#
+    names(newrow) <- headers#
+    filter.params <- rbind(filter.params, newrow)#
+  }#
+#
+  return(filter.params)#
+}#
+#
+#' Filter EVT particles with a generic filter function.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.func Filtering function.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.evt(evt, filter.notch, filter.params)#
+#' }#
+#' @export#
+filter.evt <- function(evt, filter.func, ...) {#
+  filt <- filter.func(evt, ...)#
+#
+  # SANITY CHECKS#
+  # need same columns for opp#
+  if (!all(names(evt) == names(filt$opp))) {#
+    stop('Filtering function produced OPP with different columns')#
+  }#
+#
+  return (filt)#
+}#
+#
+#' Filter EVT particles.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.notch(evt, params)#
+#' }#
+#' @export#
+filter.notch <- function(evt, filter.params) {#
+  width <- as.numeric(filter.params$width)#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # Check for empty evt data frame.  If empty return empty opp data frame.#
+  if (nrow(evt) == 0) {#
+    return(list("opp"=data.frame(c())))#
+  }#
+#
+  # linearize the LOG transformed data#
+  lin <- FALSE#
+  id <- which(colnames(evt) == "pulse_width" | colnames(evt) == "time" | colnames(evt) =="pop")#
+  if (!any(max(evt[,-c(id)]) > 10^3.5)) {#
+    evt <- untransformData(evt)#
+    lin <- TRUE#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2)#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D + notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+#
+      if(lin) opp <- transformData(opp)#
+#
+  params = list("width"=width,#
+                "notch.small.D1"= notch.small.D1,"notch.small.D2"= notch.small.D2,#
+                "notch.large.D1"= notch.large.D1,"notch.large.D2"= notch.large.D2,#
+                "offset.small.D1"= offset.small.D1,"offset.small.D2"= offset.small.D2,#
+                "offset.large.D1"= offset.large.D1,"offset.large.D2"= offset.large.D2)#
+  return(list("opp"=opp, "params"=params))#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram <- function(evt, filter.params) {#
+  width <- 2500#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # linearize the LOG transformed data#
+  id <- which(colnames(evt) == "fsc_small" | colnames(evt) == "chl_small" | colnames(evt) =="pe" | colnames(evt) =="fsc_perp" | colnames(evt) =="D1" | colnames(evt) =="D2")#
+  if (!any(max(evt[,c(id)]) > 10^3.5)) {#
+    evt[,c(id)] <- (log10(evt[,c(id)])/3.5)*2^16#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D * notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+  #################
+  ### PLOTTING ####
+  #################
+  cols <- colorRampPalette(c("blue4","royalblue4","deepskyblue3", "seagreen3", "yellow", "orangered2","darkred"))#
+  percent.opp <- round(100*nrow(opp)/nrow(evt.),2)#
+  percent.noise <- round(100-100*nrow(evt.)/nrow(evt),0)#
+#
+  if(nrow(evt.) > 10000)  evt. <- evt.[round(seq(1,nrow(evt.), length.out=10000)),]#
+  if(nrow(aligned) > 10000)  aligned <- aligned[round(seq(1,nrow(aligned), length.out=10000)),]#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+#
+  par(mfrow=c(2,3),pty='s')#
+#
+  plot.cytogram(evt., "D1", "D2")#
+  mtext("Alignment", side=3, line=3, font=2, col=2)#
+  abline(b=1, a=width, col='red',lwd=2)#
+  abline(b=1, a=- width, col='red',lwd=2)#
+  plotrix:::draw.circle(0,0, radius=2000, border=2, lwd=2)#
+  mtext(paste0("Noise = ", percent.noise, "%" ), side=3, line=2, font=2)#
+  mtext(paste("Width=", width),side=3, line=1,font=2)#
+#
+  plot.cytogram(aligned, "fsc_small", "D1")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D1, a=offset.small.D1,col=2)#
+  abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+#
+  plot.cytogram(aligned, "fsc_small", "D2")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D2, a=offset.small.D2,col=2)#
+  abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+#
+  plot.cytogram(opp, "fsc_small", "pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "fsc_small","chl_small")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "chl_small","pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  mtext(paste("OPP =", percent.opp,"% EVT"), outer=T,side=1, line=-2,font=2,col=1)#
+#
+  par(def.par)#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters for one file.#
+#'#
+#' @param evt.dir EVT file directory.#
+#' @param file.name File name with julian day directory.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram.by.file <- function(evt.dir, file.name, filter.params) {#
+  file.name <- clean.file.path(file.name)#
+  evt <- readSeaflow(file.path(evt.dir, file.name))#
+  plot.filter.cytogram(evt, filter.params)#
+}#
+#' Filter a list of EVT files.#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param evt.dir EVT file directory.#
+#' @param evt.files List of EVT files to filter. Include julian day directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param filter.id Optionally provide the ID for filter parameters. If NULL,#
+#'   the most recently saved filter parameters will be used.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir)#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir,#
+#'                  "d3afb1ea-ad20-46cf-866d-869300fe17f4")#
+#' }#
+#' @export#
+filter.evt.files <- function(db, evt.dir, evt.files, opp.dir,#
+                             filter.id=NULL) {#
+  # Get notch and width to use from params file#
+  # Return empty data frame on warning or error#
+  if (is.null(filter.id)) {#
+    filter.params <- get.filter.params.latest(db)#
+  } else {#
+    filter.params <- get.filter.params.by.id(db, filter.id)#
+  }#
+#
+  if (nrow(filter.params) == 0) {#
+    stop("No filter parameters defined")#
+  }#
+#
+  i <- 0#
+  for (evt.file in evt.files) {#
+    message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+#
+    # Read EVT file#
+    # Create empty data frame on warning or error#
+    evt <- tryCatch({#
+      path <- file.path(evt.dir, evt.file)#
+      readSeaflow(path, transform=FALSE)#
+    }, warnings = function(err) {#
+      print(err)#
+      return(data.frame())#
+    }, error = function(err) {#
+      print(err)#
+      return(data.frame())#
+    })#
+    evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+    evt_count <- nrow(evt.)#
+    all_count <- nrow(evt)#
+#
+    # Delete all versions of this OPP file#
+    delete.opp.by.file(opp.dir, evt.file)#
+#
+    for (quantile in QUANTILES) {#
+      p <- filter.params[filter.params$quantile == quantile, ]#
+      # Filter EVT to OPP#
+      # Return empty data frame on warning or error#
+      result <- tryCatch({#
+        filter.evt(evt, filter.notch, p)#
+      }, warnings = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      }, error = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      })#
+#
+      # Save OPP data#
+      if (nrow(result$opp) > 0) {#
+        save.opp.stats(db, evt.file, all_count, evt_count,#
+                       result$opp, p$id, quantile)#
+        save.opp.file(result$opp, opp.dir, evt.file, quantile)#
+      }#
+    }#
+#
+    i <-  i + 1#
+    flush.console()#
+  }#
+  message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+  flush.console()#
+}#
+#
+#' Filter a directory of EVT files using seaflowpy_filter#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param cruise.name Cruise name.#
+#' @param evt.dir EVT file directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param process.count Number of processes to start for filtering.#
+#' @param limit Only process up to this many files.#
+#' @param resolution Progress update resolution in \%.#
+#' @param width,notch.small.D1, notch.small.D2, notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2, offset.large.D1, offset.large.D2 Filter parameters.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' seaflowpy_filter("testcruise.db", "testcruise", "./testcruise", "./testcruise_opp")#
+#' }#
+#' @export#
+seaflowpy_filter <- function(db, cruise.name, evt.dir, opp.dir, process.count=1, twopass=FALSE,#
+                             limit=NULL, resolution=NULL, width=NULL,#
+                             notch.small.D1=NULL, notch.small.D2=NULL,#
+                             notch.large.D1=NULL, notch.large.D2=NULL,#
+                             offset.small.D1=NULL, offset.small.D2=NULL,#
+                             offset.large.D1=NULL, offset.large.D2=NULL){#
+#
+  # First check for seaflowpy_filter in PATH#
+  result <- tryCatch(#
+    {#
+      system2("bash", c("-lc", "'seaflowpy_filter --version'"), stdout=TRUE, stderr=TRUE)#
+    },#
+    warning=function(w) {#
+      invisible(w)#
+    },#
+    error=function(e) {#
+      return("system2error")#
+    }#
+  )#
+  if (result == "system2error") {#
+    warning("Could not run seaflowpy_filter")#
+    return()#
+  }#
+#
+  cmd <- paste0("'seaflowpy_filter ", '-c "', cruise.name, '" -e "',#
+                normalizePath(evt.dir), '" -o "',  normalizePath(opp.dir),#
+                '" -d "', normalizePath(db), '"')#
+  if (! is.null(process.count)) {#
+    cmd <- paste0(cmd, " -p ", process.count)#
+  }#
+  if (! is.null(resolution)) {#
+    cmd <- paste0(cmd, " -r ", resolution)#
+  }#
+  if (! is.null(limit)) {#
+    cmd <- paste0(cmd, " -l ", limit)#
+  }#
+  if (! is.null(width)) {#
+    cmd <- paste0(cmd, " --width ", width)#
+  }#
+  if (! is.null(notch.small.D1)) {#
+    cmd <- paste0(cmd, " --notch.small.D1 ", notch.small.D1)#
+  }#
+  if (! is.null(notch.small.D2)) {#
+    cmd <- paste0(cmd, " --notch.small.D2 ", notch.small.D2)#
+  }#
+  if (! is.null(notch.largel.D1)) {#
+    cmd <- paste0(cmd, " --notch.large.D1 ", notch.large.D1)#
+  }#
+  if (! is.null(notch.large.D2)) {#
+    cmd <- paste0(cmd, " --notch.large.D2 ", notch.large.D2)#
+  }#
+  if (! is.null(offset.small.D1)) {#
+    cmd <- paste0(cmd, " --offset.small.D1 ", offset.small.D1)#
+  }#
+  if (! is.null(offset.small.D2)) {#
+    cmd <- paste0(cmd, " --offset.small.D2 ", offset.small.D2)#
+  }#
+  if (! is.null(offset.largel.D1)) {#
+    cmd <- paste0(cmd, " --offset.large.D1 ", offset.large.D1)#
+  }#
+  if (! is.null(offset.large.D2)) {#
+    cmd <- paste0(cmd, " --offset.large.D2 ", offset.large.D2)#
+  }#
+  cmd <- paste0(cmd, "'")#
+  system2("bash", c("-lc", cmd))#
+}
+cruise <- cruise.list[52]#
+  print(cruise)#
+  DF <- read.csv(paste0(cruise,"/concatenated_EVT.csv"))#
+#
+  # Gates beads to find intersections of the two slopes used for OPP filtration#
+  ip <- inflection.point(DF)
+x <- gs_title("SeaFlow\ instrument\ log", verbose = TRUE)#
+list <- gs_read(x)#
+cruise.list <- list$cruise
+library(popcycle)#
+library(aws.s3)#
+library(googlesheets)#
+#path to Git repo#
+setwd("~/Documents/DATA/Codes/seaflow-filter")#
+#################################################
+### Copy EVT files from DAT to local machine ####
+#################################################
+# link to EVT folder containing EVT files use with this script:#
+#
+dat://2b03e08a5cc4b4cc430d5a355115c6a1597ca6d6ccfc9778f1fb5b545a600deb#
+#
+#Path to the raw data (DAT)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-filter/seaflow-filter-data/"#
+#####################################
+### CREATE concatenated EVT file ####
+#####################################
+x <- gs_title("SeaFlow\ instrument\ log", verbose = TRUE)#
+list <- gs_read(x)#
+cruise.list <- list$cruise
+cruise <- cruise.list[52]#
+  print(cruise)#
+  DF <- read.csv(paste0(cruise,"/concatenated_EVT.csv"))#
+#
+  # Gates beads to find intersections of the two slopes used for OPP filtration#
+  ip <- inflection.point(DF)
+# check OPP filtration#
+  inst <- unlist(list(list[which(list$cruise == cruise),'instrument']))#
+  params <- create.filter.params(inst, fsc=ip$fsc, d1=ip$d1, d2=ip$d2)[2,]#
+  evt <- readSeaflow(evt.list[80],transform=F)#
+  plot.filter.cytogram(evt, params)
+QUANTILES <- c(2.5, 50.0, 97.5)
+params <- create.filter.params(inst, fsc=ip$fsc, d1=ip$d1, d2=ip$d2)[2,]
+plot.filter.cytogram(evt, params)
+#' Plot helpful cytograms for estimating the D1, D2 and FSC coordinates of the inflection point (corresponds to location of 1µm beads).#
+#'#
+#' @param dataframe containing EVT data.#
+#' @return D1, D2 and fsc values of presumed 1 µm beads#
+#' @export#
+inflection.point <- function(DF){#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+  par(mfrow=c(1,3),pty='s')#
+#
+  plot.cytogram(DF, "fsc_small", "pe")#
+    poly.beads <- getpoly(quiet=TRUE)#
+    b <- subset(DF,inout(DF[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+#
+  plot.cytogram(DF, "fsc_small", "D1");points(b$fsc_small, b$D1,col=2, pch = 16, cex = 0.5)#
+      polyd1 <- getpoly(quiet=TRUE)#
+#
+  plot.cytogram(DF, "fsc_small", "D2");points(b$fsc_small, b$D2,col=2,pch = 16, cex = 0.5)#
+      polyd2 <- getpoly(quiet=TRUE)#
+#
+      fsc <- round(mean(c(polyd1[,1], polyd2[,1])))#
+      d1 <- round(mean(polyd1[,2]))#
+      d2 <- round(mean(polyd2[,2]))#
+      inflection <- data.frame(fsc, d1, d2)#
+#
+  par(def.par)#
+#
+  return(inflection)#
+}#
+#
+#' Get Notch and Offset values for Filter.notch function.#
+#'#
+#' @param inst Instrument serial number#
+#' @param fsc Small forward scatter value of 1 µm beads#
+#' @param d1 D1 value of 1 µm beads#
+#' @param d2 D2 value of 1 µm beads#
+#' @param slopes User-supplied filter slope CSV file, overriding the installed#
+#'   default file.#
+#' @return Data frame with filtering parameters for 2.5, 50.0, 97.5 quantiles#
+#' @examples#
+#' \dontrun{#
+#' filt <- create.filter.params(inst, fsc, d1, d2)#
+#' }#
+#' @export#
+create.filter.params <- function(inst, fsc, d1, d2, slope.file=NULL) {#
+  # Rename to get correct dataframe headers#
+  beads.fsc.small <- as.numeric(fsc)#
+  beads.D1 <- as.numeric(d1)#
+  beads.D2 <- as.numeric(d2)#
+#
+  width <- 2500#
+#
+  if (is.null(slope.file)) {#
+    slope.file <- system.file("filter", "seaflow_filter_slopes.csv",package='popcycle')#
+  }#
+  slopes <- read.csv(slope.file)#
+#
+  filter.params <- data.frame()#
+  headers <- c("quantile", "beads.fsc.small",#
+               "beads.D1", "beads.D2", "width",#
+               "notch.small.D1", "notch.small.D2",#
+               "notch.large.D1", "notch.large.D2",#
+               "offset.small.D1", "offset.small.D2",#
+               "offset.large.D1", "offset.large.D2")#
+#
+  for (quantile in QUANTILES) {#
+    if (quantile == 2.5) {#
+      suffix <- "_2.5"#
+    } else if (quantile == 97.5) {#
+      suffix <- "_97.5"#
+    } else if (quantile == 50.0) {#
+      suffix <- ""#
+    }#
+#
+    notch.small.D1 <- slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)]#
+    notch.small.D2 <- slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)]#
+    notch.large.D1 <- slopes[slopes$ins== inst, paste0('notch.large.D1', suffix)]#
+    notch.large.D2 <- slopes[slopes$ins== inst, paste0('notch.large.D2', suffix)]#
+    offset.small.D1 <- round(beads.D1 - notch.small.D1 * beads.fsc.small)#
+    offset.small.D2 <- round(beads.D1 - notch.small.D2 * beads.fsc.small)#
+    offset.large.D1 <- round(beads.D1 - notch.large.D1 * beads.fsc.small)#
+    offset.large.D2 <- round(beads.D2 - notch.large.D2 * beads.fsc.small)#
+#
+    if(notch.small.D1 < 0 | notch.small.D2 < 0){#
+      notch.small.D1 <- beads.D1/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)] / slopes[slopes$ins== inst, 'notch.small.D1']#
+      notch.small.D2 <- beads.D2/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)] / slopes[slopes$ins== inst, 'notch.small.D2']#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      }#
+#
+    newrow <- data.frame(quantile, beads.fsc.small,#
+                         beads.D1, beads.D2, width,#
+                         notch.small.D1, notch.small.D2,#
+                         notch.large.D1, notch.large.D2,#
+                         offset.small.D1, offset.small.D2,#
+                         offset.large.D1, offset.large.D2,#
+                         stringsAsFactors=FALSE)#
+    names(newrow) <- headers#
+    filter.params <- rbind(filter.params, newrow)#
+  }#
+#
+  return(filter.params)#
+}#
+#
+#' Filter EVT particles with a generic filter function.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.func Filtering function.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.evt(evt, filter.notch, filter.params)#
+#' }#
+#' @export#
+filter.evt <- function(evt, filter.func, ...) {#
+  filt <- filter.func(evt, ...)#
+#
+  # SANITY CHECKS#
+  # need same columns for opp#
+  if (!all(names(evt) == names(filt$opp))) {#
+    stop('Filtering function produced OPP with different columns')#
+  }#
+#
+  return (filt)#
+}#
+#
+#' Filter EVT particles.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.notch(evt, params)#
+#' }#
+#' @export#
+filter.notch <- function(evt, filter.params) {#
+  width <- as.numeric(filter.params$width)#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # Check for empty evt data frame.  If empty return empty opp data frame.#
+  if (nrow(evt) == 0) {#
+    return(list("opp"=data.frame(c())))#
+  }#
+#
+  # linearize the LOG transformed data#
+  lin <- FALSE#
+  id <- which(colnames(evt) == "pulse_width" | colnames(evt) == "time" | colnames(evt) =="pop")#
+  if (!any(max(evt[,-c(id)]) > 10^3.5)) {#
+    evt <- untransformData(evt)#
+    lin <- TRUE#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2)#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D + notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+      if(lin) opp <- transformData(opp)#
+#
+  params = list("width"=width,#
+                "notch.small.D1"= notch.small.D1,"notch.small.D2"= notch.small.D2,#
+                "notch.large.D1"= notch.large.D1,"notch.large.D2"= notch.large.D2,#
+                "offset.small.D1"= offset.small.D1,"offset.small.D2"= offset.small.D2,#
+                "offset.large.D1"= offset.large.D1,"offset.large.D2"= offset.large.D2)#
+  return(list("opp"=opp, "params"=params))#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram <- function(evt, filter.params) {#
+  width <- 2500#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # linearize the LOG transformed data#
+  id <- which(colnames(evt) == "fsc_small" | colnames(evt) == "chl_small" | colnames(evt) =="pe" | colnames(evt) =="fsc_perp" | colnames(evt) =="D1" | colnames(evt) =="D2")#
+  if (!any(max(evt[,c(id)]) > 10^3.5)) {#
+    evt[,c(id)] <- (log10(evt[,c(id)])/3.5)*2^16#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D * notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+  opp <- subset(opp != 0)  #
+  #################
+  ### PLOTTING ####
+  #################
+  cols <- colorRampPalette(c("blue4","royalblue4","deepskyblue3", "seagreen3", "yellow", "orangered2","darkred"))#
+  percent.opp <- round(100*nrow(opp)/nrow(evt.),2)#
+  percent.noise <- round(100-100*nrow(evt.)/nrow(evt),0)#
+#
+  if(nrow(evt.) > 10000)  evt. <- evt.[round(seq(1,nrow(evt.), length.out=10000)),]#
+  if(nrow(aligned) > 10000)  aligned <- aligned[round(seq(1,nrow(aligned), length.out=10000)),]#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+#
+  par(mfrow=c(2,3),pty='s')#
+#
+  plot.cytogram(evt., "D1", "D2")#
+  mtext("Alignment", side=3, line=3, font=2, col=2)#
+  abline(b=1, a=width, col='red',lwd=2)#
+  abline(b=1, a=- width, col='red',lwd=2)#
+  plotrix:::draw.circle(0,0, radius=2000, border=2, lwd=2)#
+  mtext(paste0("Noise = ", percent.noise, "%" ), side=3, line=2, font=2)#
+  mtext(paste("Width=", width),side=3, line=1,font=2)#
+#
+  plot.cytogram(aligned, "fsc_small", "D1")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D1, a=offset.small.D1,col=2)#
+  abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+#
+  plot.cytogram(aligned, "fsc_small", "D2")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D2, a=offset.small.D2,col=2)#
+  abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+#
+  plot.cytogram(opp, "fsc_small", "pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "fsc_small","chl_small")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "chl_small","pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  mtext(paste("OPP =", percent.opp,"% EVT"), outer=T,side=1, line=-2,font=2,col=1)#
+#
+  par(def.par)#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters for one file.#
+#'#
+#' @param evt.dir EVT file directory.#
+#' @param file.name File name with julian day directory.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram.by.file <- function(evt.dir, file.name, filter.params) {#
+  file.name <- clean.file.path(file.name)#
+  evt <- readSeaflow(file.path(evt.dir, file.name))#
+  plot.filter.cytogram(evt, filter.params)#
+}#
+#' Filter a list of EVT files.#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param evt.dir EVT file directory.#
+#' @param evt.files List of EVT files to filter. Include julian day directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param filter.id Optionally provide the ID for filter parameters. If NULL,#
+#'   the most recently saved filter parameters will be used.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir)#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir,#
+#'                  "d3afb1ea-ad20-46cf-866d-869300fe17f4")#
+#' }#
+#' @export#
+filter.evt.files <- function(db, evt.dir, evt.files, opp.dir,#
+                             filter.id=NULL) {#
+  # Get notch and width to use from params file#
+  # Return empty data frame on warning or error#
+  if (is.null(filter.id)) {#
+    filter.params <- get.filter.params.latest(db)#
+  } else {#
+    filter.params <- get.filter.params.by.id(db, filter.id)#
+  }#
+#
+  if (nrow(filter.params) == 0) {#
+    stop("No filter parameters defined")#
+  }#
+#
+  i <- 0#
+  for (evt.file in evt.files) {#
+    message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+#
+    # Read EVT file#
+    # Create empty data frame on warning or error#
+    evt <- tryCatch({#
+      path <- file.path(evt.dir, evt.file)#
+      readSeaflow(path, transform=FALSE)#
+    }, warnings = function(err) {#
+      print(err)#
+      return(data.frame())#
+    }, error = function(err) {#
+      print(err)#
+      return(data.frame())#
+    })#
+    evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+    evt_count <- nrow(evt.)#
+    all_count <- nrow(evt)#
+#
+    # Delete all versions of this OPP file#
+    delete.opp.by.file(opp.dir, evt.file)#
+#
+    for (quantile in QUANTILES) {#
+      p <- filter.params[filter.params$quantile == quantile, ]#
+      # Filter EVT to OPP#
+      # Return empty data frame on warning or error#
+      result <- tryCatch({#
+        filter.evt(evt, filter.notch, p)#
+      }, warnings = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      }, error = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      })#
+#
+      # Save OPP data#
+      if (nrow(result$opp) > 0) {#
+        save.opp.stats(db, evt.file, all_count, evt_count,#
+                       result$opp, p$id, quantile)#
+        save.opp.file(result$opp, opp.dir, evt.file, quantile)#
+      }#
+    }#
+#
+    i <-  i + 1#
+    flush.console()#
+  }#
+  message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+  flush.console()#
+}#
+#
+#' Filter a directory of EVT files using seaflowpy_filter#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param cruise.name Cruise name.#
+#' @param evt.dir EVT file directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param process.count Number of processes to start for filtering.#
+#' @param limit Only process up to this many files.#
+#' @param resolution Progress update resolution in \%.#
+#' @param width,notch.small.D1, notch.small.D2, notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2, offset.large.D1, offset.large.D2 Filter parameters.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' seaflowpy_filter("testcruise.db", "testcruise", "./testcruise", "./testcruise_opp")#
+#' }#
+#' @export#
+seaflowpy_filter <- function(db, cruise.name, evt.dir, opp.dir, process.count=1, twopass=FALSE,#
+                             limit=NULL, resolution=NULL, width=NULL,#
+                             notch.small.D1=NULL, notch.small.D2=NULL,#
+                             notch.large.D1=NULL, notch.large.D2=NULL,#
+                             offset.small.D1=NULL, offset.small.D2=NULL,#
+                             offset.large.D1=NULL, offset.large.D2=NULL){#
+#
+  # First check for seaflowpy_filter in PATH#
+  result <- tryCatch(#
+    {#
+      system2("bash", c("-lc", "'seaflowpy_filter --version'"), stdout=TRUE, stderr=TRUE)#
+    },#
+    warning=function(w) {#
+      invisible(w)#
+    },#
+    error=function(e) {#
+      return("system2error")#
+    }#
+  )#
+  if (result == "system2error") {#
+    warning("Could not run seaflowpy_filter")#
+    return()#
+  }#
+#
+  cmd <- paste0("'seaflowpy_filter ", '-c "', cruise.name, '" -e "',#
+                normalizePath(evt.dir), '" -o "',  normalizePath(opp.dir),#
+                '" -d "', normalizePath(db), '"')#
+  if (! is.null(process.count)) {#
+    cmd <- paste0(cmd, " -p ", process.count)#
+  }#
+  if (! is.null(resolution)) {#
+    cmd <- paste0(cmd, " -r ", resolution)#
+  }#
+  if (! is.null(limit)) {#
+    cmd <- paste0(cmd, " -l ", limit)#
+  }#
+  if (! is.null(width)) {#
+    cmd <- paste0(cmd, " --width ", width)#
+  }#
+  if (! is.null(notch.small.D1)) {#
+    cmd <- paste0(cmd, " --notch.small.D1 ", notch.small.D1)#
+  }#
+  if (! is.null(notch.small.D2)) {#
+    cmd <- paste0(cmd, " --notch.small.D2 ", notch.small.D2)#
+  }#
+  if (! is.null(notch.largel.D1)) {#
+    cmd <- paste0(cmd, " --notch.large.D1 ", notch.large.D1)#
+  }#
+  if (! is.null(notch.large.D2)) {#
+    cmd <- paste0(cmd, " --notch.large.D2 ", notch.large.D2)#
+  }#
+  if (! is.null(offset.small.D1)) {#
+    cmd <- paste0(cmd, " --offset.small.D1 ", offset.small.D1)#
+  }#
+  if (! is.null(offset.small.D2)) {#
+    cmd <- paste0(cmd, " --offset.small.D2 ", offset.small.D2)#
+  }#
+  if (! is.null(offset.largel.D1)) {#
+    cmd <- paste0(cmd, " --offset.large.D1 ", offset.large.D1)#
+  }#
+  if (! is.null(offset.large.D2)) {#
+    cmd <- paste0(cmd, " --offset.large.D2 ", offset.large.D2)#
+  }#
+  cmd <- paste0(cmd, "'")#
+  system2("bash", c("-lc", cmd))#
+}
+opp <- subset(opp, fsc_small != 0)
+#' Plot helpful cytograms for estimating the D1, D2 and FSC coordinates of the inflection point (corresponds to location of 1µm beads).#
+#'#
+#' @param dataframe containing EVT data.#
+#' @return D1, D2 and fsc values of presumed 1 µm beads#
+#' @export#
+inflection.point <- function(DF){#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+  par(mfrow=c(1,3),pty='s')#
+#
+  plot.cytogram(DF, "fsc_small", "pe")#
+    poly.beads <- getpoly(quiet=TRUE)#
+    b <- subset(DF,inout(DF[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+#
+  plot.cytogram(DF, "fsc_small", "D1");points(b$fsc_small, b$D1,col=2, pch = 16, cex = 0.5)#
+      polyd1 <- getpoly(quiet=TRUE)#
+#
+  plot.cytogram(DF, "fsc_small", "D2");points(b$fsc_small, b$D2,col=2,pch = 16, cex = 0.5)#
+      polyd2 <- getpoly(quiet=TRUE)#
+#
+      fsc <- round(mean(c(polyd1[,1], polyd2[,1])))#
+      d1 <- round(mean(polyd1[,2]))#
+      d2 <- round(mean(polyd2[,2]))#
+      inflection <- data.frame(fsc, d1, d2)#
+#
+  par(def.par)#
+#
+  return(inflection)#
+}#
+#
+#' Get Notch and Offset values for Filter.notch function.#
+#'#
+#' @param inst Instrument serial number#
+#' @param fsc Small forward scatter value of 1 µm beads#
+#' @param d1 D1 value of 1 µm beads#
+#' @param d2 D2 value of 1 µm beads#
+#' @param slopes User-supplied filter slope CSV file, overriding the installed#
+#'   default file.#
+#' @return Data frame with filtering parameters for 2.5, 50.0, 97.5 quantiles#
+#' @examples#
+#' \dontrun{#
+#' filt <- create.filter.params(inst, fsc, d1, d2)#
+#' }#
+#' @export#
+create.filter.params <- function(inst, fsc, d1, d2, slope.file=NULL) {#
+  # Rename to get correct dataframe headers#
+  beads.fsc.small <- as.numeric(fsc)#
+  beads.D1 <- as.numeric(d1)#
+  beads.D2 <- as.numeric(d2)#
+#
+  width <- 2500#
+#
+  if (is.null(slope.file)) {#
+    slope.file <- system.file("filter", "seaflow_filter_slopes.csv",package='popcycle')#
+  }#
+  slopes <- read.csv(slope.file)#
+#
+  filter.params <- data.frame()#
+  headers <- c("quantile", "beads.fsc.small",#
+               "beads.D1", "beads.D2", "width",#
+               "notch.small.D1", "notch.small.D2",#
+               "notch.large.D1", "notch.large.D2",#
+               "offset.small.D1", "offset.small.D2",#
+               "offset.large.D1", "offset.large.D2")#
+#
+  for (quantile in QUANTILES) {#
+    if (quantile == 2.5) {#
+      suffix <- "_2.5"#
+    } else if (quantile == 97.5) {#
+      suffix <- "_97.5"#
+    } else if (quantile == 50.0) {#
+      suffix <- ""#
+    }#
+#
+    notch.small.D1 <- slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)]#
+    notch.small.D2 <- slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)]#
+    notch.large.D1 <- slopes[slopes$ins== inst, paste0('notch.large.D1', suffix)]#
+    notch.large.D2 <- slopes[slopes$ins== inst, paste0('notch.large.D2', suffix)]#
+    offset.small.D1 <- round(beads.D1 - notch.small.D1 * beads.fsc.small)#
+    offset.small.D2 <- round(beads.D1 - notch.small.D2 * beads.fsc.small)#
+    offset.large.D1 <- round(beads.D1 - notch.large.D1 * beads.fsc.small)#
+    offset.large.D2 <- round(beads.D2 - notch.large.D2 * beads.fsc.small)#
+#
+    if(notch.small.D1 < 0 | notch.small.D2 < 0){#
+      notch.small.D1 <- beads.D1/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)] / slopes[slopes$ins== inst, 'notch.small.D1']#
+      notch.small.D2 <- beads.D2/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)] / slopes[slopes$ins== inst, 'notch.small.D2']#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      }#
+#
+    newrow <- data.frame(quantile, beads.fsc.small,#
+                         beads.D1, beads.D2, width,#
+                         notch.small.D1, notch.small.D2,#
+                         notch.large.D1, notch.large.D2,#
+                         offset.small.D1, offset.small.D2,#
+                         offset.large.D1, offset.large.D2,#
+                         stringsAsFactors=FALSE)#
+    names(newrow) <- headers#
+    filter.params <- rbind(filter.params, newrow)#
+  }#
+#
+  return(filter.params)#
+}#
+#
+#' Filter EVT particles with a generic filter function.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.func Filtering function.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.evt(evt, filter.notch, filter.params)#
+#' }#
+#' @export#
+filter.evt <- function(evt, filter.func, ...) {#
+  filt <- filter.func(evt, ...)#
+#
+  # SANITY CHECKS#
+  # need same columns for opp#
+  if (!all(names(evt) == names(filt$opp))) {#
+    stop('Filtering function produced OPP with different columns')#
+  }#
+#
+  return (filt)#
+}#
+#
+#' Filter EVT particles.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.notch(evt, params)#
+#' }#
+#' @export#
+filter.notch <- function(evt, filter.params) {#
+  width <- as.numeric(filter.params$width)#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # Check for empty evt data frame.  If empty return empty opp data frame.#
+  if (nrow(evt) == 0) {#
+    return(list("opp"=data.frame(c())))#
+  }#
+#
+  # linearize the LOG transformed data#
+  lin <- FALSE#
+  id <- which(colnames(evt) == "pulse_width" | colnames(evt) == "time" | colnames(evt) =="pop")#
+  if (!any(max(evt[,-c(id)]) > 10^3.5)) {#
+    evt <- untransformData(evt)#
+    lin <- TRUE#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2)#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D + notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+      if(lin) opp <- transformData(opp)#
+#
+  params = list("width"=width,#
+                "notch.small.D1"= notch.small.D1,"notch.small.D2"= notch.small.D2,#
+                "notch.large.D1"= notch.large.D1,"notch.large.D2"= notch.large.D2,#
+                "offset.small.D1"= offset.small.D1,"offset.small.D2"= offset.small.D2,#
+                "offset.large.D1"= offset.large.D1,"offset.large.D2"= offset.large.D2)#
+  return(list("opp"=opp, "params"=params))#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram <- function(evt, filter.params) {#
+  width <- 2500#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # linearize the LOG transformed data#
+  id <- which(colnames(evt) == "fsc_small" | colnames(evt) == "chl_small" | colnames(evt) =="pe" | colnames(evt) =="fsc_perp" | colnames(evt) =="D1" | colnames(evt) =="D2")#
+  if (!any(max(evt[,c(id)]) > 10^3.5)) {#
+    evt[,c(id)] <- (log10(evt[,c(id)])/3.5)*2^16#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D * notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+  opp <- subset(opp, fsc_small != 0)  #
+  #################
+  ### PLOTTING ####
+  #################
+  cols <- colorRampPalette(c("blue4","royalblue4","deepskyblue3", "seagreen3", "yellow", "orangered2","darkred"))#
+  percent.opp <- round(100*nrow(opp)/nrow(evt.),2)#
+  percent.noise <- round(100-100*nrow(evt.)/nrow(evt),0)#
+#
+  if(nrow(evt.) > 10000)  evt. <- evt.[round(seq(1,nrow(evt.), length.out=10000)),]#
+  if(nrow(aligned) > 10000)  aligned <- aligned[round(seq(1,nrow(aligned), length.out=10000)),]#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+#
+  par(mfrow=c(2,3),pty='s')#
+#
+  plot.cytogram(evt., "D1", "D2")#
+  mtext("Alignment", side=3, line=3, font=2, col=2)#
+  abline(b=1, a=width, col='red',lwd=2)#
+  abline(b=1, a=- width, col='red',lwd=2)#
+  plotrix:::draw.circle(0,0, radius=2000, border=2, lwd=2)#
+  mtext(paste0("Noise = ", percent.noise, "%" ), side=3, line=2, font=2)#
+  mtext(paste("Width=", width),side=3, line=1,font=2)#
+#
+  plot.cytogram(aligned, "fsc_small", "D1")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D1, a=offset.small.D1,col=2)#
+  abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+#
+  plot.cytogram(aligned, "fsc_small", "D2")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D2, a=offset.small.D2,col=2)#
+  abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+#
+  plot.cytogram(opp, "fsc_small", "pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "fsc_small","chl_small")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "chl_small","pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  mtext(paste("OPP =", percent.opp,"% EVT"), outer=T,side=1, line=-2,font=2,col=1)#
+#
+  par(def.par)#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters for one file.#
+#'#
+#' @param evt.dir EVT file directory.#
+#' @param file.name File name with julian day directory.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram.by.file <- function(evt.dir, file.name, filter.params) {#
+  file.name <- clean.file.path(file.name)#
+  evt <- readSeaflow(file.path(evt.dir, file.name))#
+  plot.filter.cytogram(evt, filter.params)#
+}#
+#' Filter a list of EVT files.#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param evt.dir EVT file directory.#
+#' @param evt.files List of EVT files to filter. Include julian day directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param filter.id Optionally provide the ID for filter parameters. If NULL,#
+#'   the most recently saved filter parameters will be used.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir)#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir,#
+#'                  "d3afb1ea-ad20-46cf-866d-869300fe17f4")#
+#' }#
+#' @export#
+filter.evt.files <- function(db, evt.dir, evt.files, opp.dir,#
+                             filter.id=NULL) {#
+  # Get notch and width to use from params file#
+  # Return empty data frame on warning or error#
+  if (is.null(filter.id)) {#
+    filter.params <- get.filter.params.latest(db)#
+  } else {#
+    filter.params <- get.filter.params.by.id(db, filter.id)#
+  }#
+#
+  if (nrow(filter.params) == 0) {#
+    stop("No filter parameters defined")#
+  }#
+#
+  i <- 0#
+  for (evt.file in evt.files) {#
+    message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+#
+    # Read EVT file#
+    # Create empty data frame on warning or error#
+    evt <- tryCatch({#
+      path <- file.path(evt.dir, evt.file)#
+      readSeaflow(path, transform=FALSE)#
+    }, warnings = function(err) {#
+      print(err)#
+      return(data.frame())#
+    }, error = function(err) {#
+      print(err)#
+      return(data.frame())#
+    })#
+    evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+    evt_count <- nrow(evt.)#
+    all_count <- nrow(evt)#
+#
+    # Delete all versions of this OPP file#
+    delete.opp.by.file(opp.dir, evt.file)#
+#
+    for (quantile in QUANTILES) {#
+      p <- filter.params[filter.params$quantile == quantile, ]#
+      # Filter EVT to OPP#
+      # Return empty data frame on warning or error#
+      result <- tryCatch({#
+        filter.evt(evt, filter.notch, p)#
+      }, warnings = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      }, error = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      })#
+#
+      # Save OPP data#
+      if (nrow(result$opp) > 0) {#
+        save.opp.stats(db, evt.file, all_count, evt_count,#
+                       result$opp, p$id, quantile)#
+        save.opp.file(result$opp, opp.dir, evt.file, quantile)#
+      }#
+    }#
+#
+    i <-  i + 1#
+    flush.console()#
+  }#
+  message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+  flush.console()#
+}#
+#
+#' Filter a directory of EVT files using seaflowpy_filter#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param cruise.name Cruise name.#
+#' @param evt.dir EVT file directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param process.count Number of processes to start for filtering.#
+#' @param limit Only process up to this many files.#
+#' @param resolution Progress update resolution in \%.#
+#' @param width,notch.small.D1, notch.small.D2, notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2, offset.large.D1, offset.large.D2 Filter parameters.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' seaflowpy_filter("testcruise.db", "testcruise", "./testcruise", "./testcruise_opp")#
+#' }#
+#' @export#
+seaflowpy_filter <- function(db, cruise.name, evt.dir, opp.dir, process.count=1, twopass=FALSE,#
+                             limit=NULL, resolution=NULL, width=NULL,#
+                             notch.small.D1=NULL, notch.small.D2=NULL,#
+                             notch.large.D1=NULL, notch.large.D2=NULL,#
+                             offset.small.D1=NULL, offset.small.D2=NULL,#
+                             offset.large.D1=NULL, offset.large.D2=NULL){#
+#
+  # First check for seaflowpy_filter in PATH#
+  result <- tryCatch(#
+    {#
+      system2("bash", c("-lc", "'seaflowpy_filter --version'"), stdout=TRUE, stderr=TRUE)#
+    },#
+    warning=function(w) {#
+      invisible(w)#
+    },#
+    error=function(e) {#
+      return("system2error")#
+    }#
+  )#
+  if (result == "system2error") {#
+    warning("Could not run seaflowpy_filter")#
+    return()#
+  }#
+#
+  cmd <- paste0("'seaflowpy_filter ", '-c "', cruise.name, '" -e "',#
+                normalizePath(evt.dir), '" -o "',  normalizePath(opp.dir),#
+                '" -d "', normalizePath(db), '"')#
+  if (! is.null(process.count)) {#
+    cmd <- paste0(cmd, " -p ", process.count)#
+  }#
+  if (! is.null(resolution)) {#
+    cmd <- paste0(cmd, " -r ", resolution)#
+  }#
+  if (! is.null(limit)) {#
+    cmd <- paste0(cmd, " -l ", limit)#
+  }#
+  if (! is.null(width)) {#
+    cmd <- paste0(cmd, " --width ", width)#
+  }#
+  if (! is.null(notch.small.D1)) {#
+    cmd <- paste0(cmd, " --notch.small.D1 ", notch.small.D1)#
+  }#
+  if (! is.null(notch.small.D2)) {#
+    cmd <- paste0(cmd, " --notch.small.D2 ", notch.small.D2)#
+  }#
+  if (! is.null(notch.largel.D1)) {#
+    cmd <- paste0(cmd, " --notch.large.D1 ", notch.large.D1)#
+  }#
+  if (! is.null(notch.large.D2)) {#
+    cmd <- paste0(cmd, " --notch.large.D2 ", notch.large.D2)#
+  }#
+  if (! is.null(offset.small.D1)) {#
+    cmd <- paste0(cmd, " --offset.small.D1 ", offset.small.D1)#
+  }#
+  if (! is.null(offset.small.D2)) {#
+    cmd <- paste0(cmd, " --offset.small.D2 ", offset.small.D2)#
+  }#
+  if (! is.null(offset.largel.D1)) {#
+    cmd <- paste0(cmd, " --offset.large.D1 ", offset.large.D1)#
+  }#
+  if (! is.null(offset.large.D2)) {#
+    cmd <- paste0(cmd, " --offset.large.D2 ", offset.large.D2)#
+  }#
+  cmd <- paste0(cmd, "'")#
+  system2("bash", c("-lc", cmd))#
+}
+plot.filter.cytogram(evt, params)
+#' Plot helpful cytograms for estimating the D1, D2 and FSC coordinates of the inflection point (corresponds to location of 1µm beads).#
+#'#
+#' @param dataframe containing EVT data.#
+#' @return D1, D2 and fsc values of presumed 1 µm beads#
+#' @export#
+inflection.point <- function(DF){#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+  par(mfrow=c(1,3),pty='s')#
+#
+  plot.cytogram(DF, "fsc_small", "pe")#
+    poly.beads <- getpoly(quiet=TRUE)#
+    b <- subset(DF,inout(DF[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+#
+  plot.cytogram(DF, "fsc_small", "D1");points(b$fsc_small, b$D1,col=2, pch = 16, cex = 0.5)#
+      polyd1 <- getpoly(quiet=TRUE)#
+#
+  plot.cytogram(DF, "fsc_small", "D2");points(b$fsc_small, b$D2,col=2,pch = 16, cex = 0.5)#
+      polyd2 <- getpoly(quiet=TRUE)#
+#
+      fsc <- round(mean(c(polyd1[,1], polyd2[,1])))#
+      d1 <- round(mean(polyd1[,2]))#
+      d2 <- round(mean(polyd2[,2]))#
+      inflection <- data.frame(fsc, d1, d2)#
+#
+  par(def.par)#
+#
+  return(inflection)#
+}#
+#
+#' Get Notch and Offset values for Filter.notch function.#
+#'#
+#' @param inst Instrument serial number#
+#' @param fsc Small forward scatter value of 1 µm beads#
+#' @param d1 D1 value of 1 µm beads#
+#' @param d2 D2 value of 1 µm beads#
+#' @param slopes User-supplied filter slope CSV file, overriding the installed#
+#'   default file.#
+#' @return Data frame with filtering parameters for 2.5, 50.0, 97.5 quantiles#
+#' @examples#
+#' \dontrun{#
+#' filt <- create.filter.params(inst, fsc, d1, d2)#
+#' }#
+#' @export#
+create.filter.params <- function(inst, fsc, d1, d2, slope.file=NULL) {#
+  # Rename to get correct dataframe headers#
+  beads.fsc.small <- as.numeric(fsc)#
+  beads.D1 <- as.numeric(d1)#
+  beads.D2 <- as.numeric(d2)#
+#
+  width <- 2500#
+#
+  if (is.null(slope.file)) {#
+    slope.file <- system.file("filter", "seaflow_filter_slopes.csv",package='popcycle')#
+  }#
+  slopes <- read.csv(slope.file)#
+#
+  filter.params <- data.frame()#
+  headers <- c("quantile", "beads.fsc.small",#
+               "beads.D1", "beads.D2", "width",#
+               "notch.small.D1", "notch.small.D2",#
+               "notch.large.D1", "notch.large.D2",#
+               "offset.small.D1", "offset.small.D2",#
+               "offset.large.D1", "offset.large.D2")#
+#
+  for (quantile in QUANTILES) {#
+    if (quantile == 2.5) {#
+      suffix <- "_2.5"#
+    } else if (quantile == 97.5) {#
+      suffix <- "_97.5"#
+    } else if (quantile == 50.0) {#
+      suffix <- ""#
+    }#
+#
+    notch.small.D1 <- slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)]#
+    notch.small.D2 <- slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)]#
+    notch.large.D1 <- slopes[slopes$ins== inst, paste0('notch.large.D1', suffix)]#
+    notch.large.D2 <- slopes[slopes$ins== inst, paste0('notch.large.D2', suffix)]#
+    offset.small.D1 <- round(beads.D1 - notch.small.D1 * beads.fsc.small)#
+    offset.small.D2 <- round(beads.D1 - notch.small.D2 * beads.fsc.small)#
+    offset.large.D1 <- round(beads.D1 - notch.large.D1 * beads.fsc.small)#
+    offset.large.D2 <- round(beads.D2 - notch.large.D2 * beads.fsc.small)#
+#
+    #if(notch.small.D1 < 0 | notch.small.D2 < 0){#
+      notch.small.D1 <- beads.D1/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D1', suffix)] / slopes[slopes$ins== inst, 'notch.small.D1']#
+      notch.small.D2 <- beads.D2/beads.fsc.small  * slopes[slopes$ins== inst, paste0('notch.small.D2', suffix)] / slopes[slopes$ins== inst, 'notch.small.D2']#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+  #    }#
+#
+    newrow <- data.frame(quantile, beads.fsc.small,#
+                         beads.D1, beads.D2, width,#
+                         notch.small.D1, notch.small.D2,#
+                         notch.large.D1, notch.large.D2,#
+                         offset.small.D1, offset.small.D2,#
+                         offset.large.D1, offset.large.D2,#
+                         stringsAsFactors=FALSE)#
+    names(newrow) <- headers#
+    filter.params <- rbind(filter.params, newrow)#
+  }#
+#
+  return(filter.params)#
+}#
+#
+#' Filter EVT particles with a generic filter function.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.func Filtering function.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.evt(evt, filter.notch, filter.params)#
+#' }#
+#' @export#
+filter.evt <- function(evt, filter.func, ...) {#
+  filt <- filter.func(evt, ...)#
+#
+  # SANITY CHECKS#
+  # need same columns for opp#
+  if (!all(names(evt) == names(filt$opp))) {#
+    stop('Filtering function produced OPP with different columns')#
+  }#
+#
+  return (filt)#
+}#
+#
+#' Filter EVT particles.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return Named list where list$params contains a list of filtering parameters#
+#'   and list$opp contains OPP data frame.#
+#' @examples#
+#' \dontrun{#
+#' filt <- filter.notch(evt, params)#
+#' }#
+#' @export#
+filter.notch <- function(evt, filter.params) {#
+  width <- as.numeric(filter.params$width)#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # Check for empty evt data frame.  If empty return empty opp data frame.#
+  if (nrow(evt) == 0) {#
+    return(list("opp"=data.frame(c())))#
+  }#
+#
+  # linearize the LOG transformed data#
+  lin <- FALSE#
+  id <- which(colnames(evt) == "pulse_width" | colnames(evt) == "time" | colnames(evt) =="pop")#
+  if (!any(max(evt[,-c(id)]) > 10^3.5)) {#
+    evt <- untransformData(evt)#
+    lin <- TRUE#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2)#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D + notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+      if(lin) opp <- transformData(opp)#
+#
+  params = list("width"=width,#
+                "notch.small.D1"= notch.small.D1,"notch.small.D2"= notch.small.D2,#
+                "notch.large.D1"= notch.large.D1,"notch.large.D2"= notch.large.D2,#
+                "offset.small.D1"= offset.small.D1,"offset.small.D2"= offset.small.D2,#
+                "offset.large.D1"= offset.large.D1,"offset.large.D2"= offset.large.D2)#
+  return(list("opp"=opp, "params"=params))#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters.#
+#'#
+#' @param evt EVT data frame.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram <- function(evt, filter.params) {#
+  width <- 2500#
+  notch.small.D1 <- as.numeric(filter.params$notch.small.D1)#
+  notch.small.D2 <- as.numeric(filter.params$notch.small.D2)#
+  notch.large.D1 <- as.numeric(filter.params$notch.large.D1)#
+  notch.large.D2 <- as.numeric(filter.params$notch.large.D2)#
+  offset.small.D1 <- as.numeric(filter.params$offset.small.D1)#
+  offset.small.D2 <- as.numeric(filter.params$offset.small.D2)#
+  offset.large.D1 <- as.numeric(filter.params$offset.large.D1)#
+  offset.large.D2 <- as.numeric(filter.params$offset.large.D2)#
+#
+  # linearize the LOG transformed data#
+  id <- which(colnames(evt) == "fsc_small" | colnames(evt) == "chl_small" | colnames(evt) =="pe" | colnames(evt) =="fsc_perp" | colnames(evt) =="D1" | colnames(evt) =="D2")#
+  if (!any(max(evt[,c(id)]) > 10^3.5)) {#
+    evt[,c(id)] <- (log10(evt[,c(id)])/3.5)*2^16#
+  }#
+#
+  # Filtering out noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+  # Filtering focused particles (fsc_small > D * notch)#
+  opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+      D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+  opp <- subset(opp, fsc_small != 0)  #
+  #################
+  ### PLOTTING ####
+  #################
+  cols <- colorRampPalette(c("blue4","royalblue4","deepskyblue3", "seagreen3", "yellow", "orangered2","darkred"))#
+  percent.opp <- round(100*nrow(opp)/nrow(evt.),2)#
+  percent.noise <- round(100-100*nrow(evt.)/nrow(evt),0)#
+#
+  if(nrow(evt.) > 10000)  evt. <- evt.[round(seq(1,nrow(evt.), length.out=10000)),]#
+  if(nrow(aligned) > 10000)  aligned <- aligned[round(seq(1,nrow(aligned), length.out=10000)),]#
+#
+  def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+#
+  par(mfrow=c(2,3),pty='s')#
+#
+  plot.cytogram(evt., "D1", "D2")#
+  mtext("Alignment", side=3, line=3, font=2, col=2)#
+  abline(b=1, a=width, col='red',lwd=2)#
+  abline(b=1, a=- width, col='red',lwd=2)#
+  plotrix:::draw.circle(0,0, radius=2000, border=2, lwd=2)#
+  mtext(paste0("Noise = ", percent.noise, "%" ), side=3, line=2, font=2)#
+  mtext(paste("Width=", width),side=3, line=1,font=2)#
+#
+  plot.cytogram(aligned, "fsc_small", "D1")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D1, a=offset.small.D1,col=2)#
+  abline(b=notch.large.D1, a=offset.large.D1,col=3)#
+#
+  plot.cytogram(aligned, "fsc_small", "D2")#
+  mtext("Focus", side=3, line=3, font=2,col=2)#
+  abline(b=notch.small.D2, a=offset.small.D2,col=2)#
+  abline(b=notch.large.D2, a=offset.large.D2,col=3)#
+#
+  plot.cytogram(opp, "fsc_small", "pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "fsc_small","chl_small")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  plot.cytogram(opp, "chl_small","pe")#
+  mtext("OPP", side=3, line=1, font=2, col=2)#
+  mtext(paste("OPP =", percent.opp,"% EVT"), outer=T,side=1, line=-2,font=2,col=1)#
+#
+  par(def.par)#
+}#
+#
+#' Plot helpful cytograms for exploring filtering parameters for one file.#
+#'#
+#' @param evt.dir EVT file directory.#
+#' @param file.name File name with julian day directory.#
+#' @param filter.params Filtering parameters in a one row data frame or named#
+#'   list. Columns should include width, notch.small.D1, notch.small.D2,#
+#'   notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2,#
+#'   offset.large.D1, offset.large.D2.#
+#' @return None#
+#' @export#
+plot.filter.cytogram.by.file <- function(evt.dir, file.name, filter.params) {#
+  file.name <- clean.file.path(file.name)#
+  evt <- readSeaflow(file.path(evt.dir, file.name))#
+  plot.filter.cytogram(evt, filter.params)#
+}#
+#' Filter a list of EVT files.#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param evt.dir EVT file directory.#
+#' @param evt.files List of EVT files to filter. Include julian day directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param filter.id Optionally provide the ID for filter parameters. If NULL,#
+#'   the most recently saved filter parameters will be used.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir)#
+#' filter.evt.files(db, evt.dir, evt.files, opp.dir,#
+#'                  "d3afb1ea-ad20-46cf-866d-869300fe17f4")#
+#' }#
+#' @export#
+filter.evt.files <- function(db, evt.dir, evt.files, opp.dir,#
+                             filter.id=NULL) {#
+  # Get notch and width to use from params file#
+  # Return empty data frame on warning or error#
+  if (is.null(filter.id)) {#
+    filter.params <- get.filter.params.latest(db)#
+  } else {#
+    filter.params <- get.filter.params.by.id(db, filter.id)#
+  }#
+#
+  if (nrow(filter.params) == 0) {#
+    stop("No filter parameters defined")#
+  }#
+#
+  i <- 0#
+  for (evt.file in evt.files) {#
+    message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+#
+    # Read EVT file#
+    # Create empty data frame on warning or error#
+    evt <- tryCatch({#
+      path <- file.path(evt.dir, evt.file)#
+      readSeaflow(path, transform=FALSE)#
+    }, warnings = function(err) {#
+      print(err)#
+      return(data.frame())#
+    }, error = function(err) {#
+      print(err)#
+      return(data.frame())#
+    })#
+    evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+    evt_count <- nrow(evt.)#
+    all_count <- nrow(evt)#
+#
+    # Delete all versions of this OPP file#
+    delete.opp.by.file(opp.dir, evt.file)#
+#
+    for (quantile in QUANTILES) {#
+      p <- filter.params[filter.params$quantile == quantile, ]#
+      # Filter EVT to OPP#
+      # Return empty data frame on warning or error#
+      result <- tryCatch({#
+        filter.evt(evt, filter.notch, p)#
+      }, warnings = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      }, error = function(err) {#
+        print(err)#
+        return(list(opp=data.frame()))#
+      })#
+#
+      # Save OPP data#
+      if (nrow(result$opp) > 0) {#
+        save.opp.stats(db, evt.file, all_count, evt_count,#
+                       result$opp, p$id, quantile)#
+        save.opp.file(result$opp, opp.dir, evt.file, quantile)#
+      }#
+    }#
+#
+    i <-  i + 1#
+    flush.console()#
+  }#
+  message(round(100*i/length(evt.files)), "% completed \r", appendLF=FALSE)#
+  flush.console()#
+}#
+#
+#' Filter a directory of EVT files using seaflowpy_filter#
+#'#
+#' Filter a list of EVT files. Save OPP per file aggregate statistics to#
+#' SQLite3 database and save particle data to binary files in opp.dir.#
+#'#
+#' @param db SQLite3 database file path.#
+#' @param cruise.name Cruise name.#
+#' @param evt.dir EVT file directory.#
+#' @param opp.dir OPP file output directory.#
+#' @param process.count Number of processes to start for filtering.#
+#' @param limit Only process up to this many files.#
+#' @param resolution Progress update resolution in \%.#
+#' @param width,notch.small.D1, notch.small.D2, notch.large.D1, notch.large.D2, offset.small.D1, offset.small.D2, offset.large.D1, offset.large.D2 Filter parameters.#
+#' @return None#
+#' @examples#
+#' \dontrun{#
+#' seaflowpy_filter("testcruise.db", "testcruise", "./testcruise", "./testcruise_opp")#
+#' }#
+#' @export#
+seaflowpy_filter <- function(db, cruise.name, evt.dir, opp.dir, process.count=1, twopass=FALSE,#
+                             limit=NULL, resolution=NULL, width=NULL,#
+                             notch.small.D1=NULL, notch.small.D2=NULL,#
+                             notch.large.D1=NULL, notch.large.D2=NULL,#
+                             offset.small.D1=NULL, offset.small.D2=NULL,#
+                             offset.large.D1=NULL, offset.large.D2=NULL){#
+#
+  # First check for seaflowpy_filter in PATH#
+  result <- tryCatch(#
+    {#
+      system2("bash", c("-lc", "'seaflowpy_filter --version'"), stdout=TRUE, stderr=TRUE)#
+    },#
+    warning=function(w) {#
+      invisible(w)#
+    },#
+    error=function(e) {#
+      return("system2error")#
+    }#
+  )#
+  if (result == "system2error") {#
+    warning("Could not run seaflowpy_filter")#
+    return()#
+  }#
+#
+  cmd <- paste0("'seaflowpy_filter ", '-c "', cruise.name, '" -e "',#
+                normalizePath(evt.dir), '" -o "',  normalizePath(opp.dir),#
+                '" -d "', normalizePath(db), '"')#
+  if (! is.null(process.count)) {#
+    cmd <- paste0(cmd, " -p ", process.count)#
+  }#
+  if (! is.null(resolution)) {#
+    cmd <- paste0(cmd, " -r ", resolution)#
+  }#
+  if (! is.null(limit)) {#
+    cmd <- paste0(cmd, " -l ", limit)#
+  }#
+  if (! is.null(width)) {#
+    cmd <- paste0(cmd, " --width ", width)#
+  }#
+  if (! is.null(notch.small.D1)) {#
+    cmd <- paste0(cmd, " --notch.small.D1 ", notch.small.D1)#
+  }#
+  if (! is.null(notch.small.D2)) {#
+    cmd <- paste0(cmd, " --notch.small.D2 ", notch.small.D2)#
+  }#
+  if (! is.null(notch.largel.D1)) {#
+    cmd <- paste0(cmd, " --notch.large.D1 ", notch.large.D1)#
+  }#
+  if (! is.null(notch.large.D2)) {#
+    cmd <- paste0(cmd, " --notch.large.D2 ", notch.large.D2)#
+  }#
+  if (! is.null(offset.small.D1)) {#
+    cmd <- paste0(cmd, " --offset.small.D1 ", offset.small.D1)#
+  }#
+  if (! is.null(offset.small.D2)) {#
+    cmd <- paste0(cmd, " --offset.small.D2 ", offset.small.D2)#
+  }#
+  if (! is.null(offset.largel.D1)) {#
+    cmd <- paste0(cmd, " --offset.large.D1 ", offset.large.D1)#
+  }#
+  if (! is.null(offset.large.D2)) {#
+    cmd <- paste0(cmd, " --offset.large.D2 ", offset.large.D2)#
+  }#
+  cmd <- paste0(cmd, "'")#
+  system2("bash", c("-lc", cmd))#
+}
+library(scales)#
+library(plotrix)#
+library(maps)#
+library(DEoptim)#
+#
+dir <- "/Volumes/GoogleDrive/My Drive/manuscript_2/data"#
+setwd(dir)#
+#
+GR <- read.csv("nutrient-GRproV3.csv")#
+GR$clim.DIN.darwin <- GR$clim.nh4.darwin + GR$clim.no2.darwin + GR$clim.no3.darwin#
+#
+cols <- colorRampPalette(c("blue4", "deepskyblue3",  "seagreen3", "yellow", "orangered2", "darkred"))#
+##########################
+#### CREATE FUNCTIONs ####
+##########################
+#
+nut.temp.gr.matrix <- function(y, ksat, mumax, tau1, A){#
+#
+    temp <- seq(10,30,length.out=200)#
+    nut <- seq(min(y, na.rm=T), max(y, na.rm=T),length.out=200)#
+#
+    ## NUT (Michaelis-Menten)#
+    #ksat <- 3.8       #3.8 nM PO4 +/- 3.8 Lomas et al. 2013 (Prochlorocccus at 5 m)#
+    #mumax <- 9*10^-6*(60*60*24) # mumax try to match Seaflow data#
+#
+    ## TEMP (Pseudo-eppley)#
+    #tau1 <- 0.07 # 0.15 # 0.50; 0.33#
+    #A <- 0.11 #0.063 #  1.05#
+    tlimitt <- tau1*exp(A*temp)#
+#
+    ## calculate GR given tlimitt for each nut values#
+    muept <- matrix(NA, ncol= length(nut), nrow=length(tlimitt))#
+    colnames(muept) <- nut#
+    row.names(muept) <- temp#
+#
+    for(inut in 1:length(nut)) muept[,inut] <- mumax*tlimitt*nut[inut]/(nut[inut]+ksat)#
+#
+      return(muept)#
+  }#
+#
+find.values.matrix <- function(x, y, t){#
+#
+    if(length(x) != length(y)) {#
+      print("length of x is not equal length of y")#
+      stop#
+    }#
+      temp <- as.numeric(rownames(t))#
+      nut <- as.numeric(colnames(t))#
+      id.x <- findInterval(x, temp, all.inside=T)#
+      id.y <- findInterval(y, nut, all.inside=T)#
+#
+      DF <- NULL#
+      for(id in 1:length(x)){#
+        df <- t[id.x[id],id.y[id]]#
+        DF <- c(DF,df)#
+        }#
+        return(DF)#
+    }#
+#
+nut.temp.gr <- function(x, y, ksat, mumax, tau1, A){#
+#
+  DF <- mumax * (y/(y+ksat) * tau1 * exp(A * x))#
+  return(DF)#
+#
+}#
+#
+sigma.lsq <- function(x, y, z, params){#
+#
+    # ksat <- 3.8#
+    # mumax <- 0.8#
+    # tau1 <- 0.07#
+    # A <- 0.11#
+    # params <- res$optim$bestmem#
+    ##
+      ksat <- params[1]#
+      mumax <- params[2]#
+      tau1 <- params[3]#
+      A <- params[4]#
+      # t <-  nut.temp.gr.matrix(y, ksat, mumax, tau1, A)#
+      # id <- find.values.matrix(x=x, y=y, t)#
+      id <- nut.temp.gr(x, y, ksat, mumax, tau1, A)#
+      df <- data.frame(obs=z, pred=id)#
+      sigma <- mean(abs(df$obs - df$pred)/df$obs,na.rm=T)#
+      return(sigma*100)#
+  }#
+plot.validation <- function(x, y, z, t, id,...){#
+    cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3",  "seagreen3", "yellow", "orangered2", "darkred"))#
+#
+    df <- data.frame(obs=z, pred=id)#
+    temp <- as.numeric(rownames(t))#
+    nut <- as.numeric(colnames(t))#
+#
+    l <- lm(pred ~ obs, data=df)#
+#
+    par(mfrow=c(1,2),pty='s',cex=1.2)#
+      image(x=temp,y=nut, z=t, col=cols(100),xlab="Temp (˚C)", ylab="Nutrients (nM)", ...)#
+        points(x, y, pch=21, col='white', cex=1.5)#, bg=cols(100)[cut(z,100)])#
+#
+        mtext(expression("GR" == paste("µ"["max"], frac("R", "R + k"["sat"]),#
+                " ",gamma, e^{"AT"})), cex = 1.2, 3,4)#
+#
+      plot(df$obs, df$pred, xlab=expression(paste("Obs GR (d"^{-1},")")), ylab=expression(paste("Pred GR (d"^{-1},")")), xlim=c(0,1), ylim=c(0,1))#
+        abline(b=1,a=0, lty=2)#
+        abline(b=l$coefficients[2],a=l$coefficients[1], lty=1,col=2,lwd=2)#
+    }#
+#################
+### FIGURE 1 ####
+#################
+png("Figure1.png",width=14, height=10, unit='in', res=500)#
+#
+para <- 'season'#
+cex <- 1.4#
+def.par <- par(no.readonly = TRUE) # save default, for resetting...#
+layout(matrix(c(2,1,1,3,1,1), 2, 3, byrow = TRUE))#
+par(cex=cex, pty='s')#
+#
+plotCI(GR$temperature, GR$dr, GR$dr.sd, pch=NA, col='grey', sfrac=0, lwd=2, xlab="Temp (˚C)",ylab=expression(paste("GR (d"^{-1},")")),ylim=c(0,1), las=1)#
+plotCI(GR$temperature, GR$dr, GR$temperature.sd, err='x', pch=NA, col='grey', sfrac=0, lwd=2, add=T)#
+legend("topleft",legend=unique(GR$season), pch=21, col='lightgrey',pt.bg=alpha(cols(length(unique(GR[,para])))), bty='n',cex=cex/1.5)#
+  i <- 1#
+  for(cruise in unique(GR[,para])){#
+      GR2 <- subset(GR, GR[,para] == cruise)#
+      points(GR2$temperature, GR2$dr, pch=21, col='lightgrey',bg=alpha(cols(length(unique(GR[,para])))[i],0.5), cex=cex)#
+      i <- 1 + i#
+      }#
+#
+    choice <- c("average", "max")#
+    d <- choice[2]#
+    dtemp <- 1.5#
+    temp.range <- round(range(GR$temperature, na.rm=T))#
+    seq.temp <- seq(temp.range[1], temp.range[2]+1, by=dtemp)#
+    cut.temp <- cut(GR$temperature, seq.temp)#
+    temp <- tapply(GR$temperature, cut.temp, function(x) mean(x, na.rm=T))#
+    if (d == "max") gr <- tapply(GR$dr, cut.temp, function(x) max(x, na.rm=T))#
+    if(d == "average") gr <- tapply(GR$dr, cut.temp, function(x) mean(x, na.rm=T))#
+    if(d == "average") df <- data.frame(temp, gr)#
+    if (d == "max") df <- data.frame(temp, gr); df <- subset(df, temp < 27)#
+    # points(data$temp, data$gr)#
+    if(d == "average") fit <- lm(gr ~ poly(temp,1,raw=T), df)#
+    if(d == "max") fit <- lm(gr ~ poly(temp,2,raw=T), df)#
+#
+    summary(fit)#
+    pred <- predict.lm(fit, newdata=data.frame(temperature=temp), interval='confidence')#
+lines(temp, pred[,'fit'], lwd=2, col='red3')#
+lines(temp, pred[,'lwr'], lwd=1, col=1,lty=2)#
+lines(temp, pred[,'upr'], lwd=1, col=1,lty=2)#
+mtext("B", at=par("usr")[4], side=2, line=3,cex=cex*2, las=1)#
+#
+# ########
+# Q10 <- NULL#
+# for(i in 1:(nrow(pred)-1)){#
+#   q10.mean <- (pred[i+1,'fit']/pred[i,'fit'])^(10/dtemp)#
+#   q10.lwr <- (pred[i+1,'lwr']/pred[i,'lwr'])^(10/dtemp)#
+#   q10.upr <- (pred[i+1,'upr']/pred[i,'upr'])^(10/dtemp)#
+#   q10 <- cbind(q10.mean, q10.lwr, q10.upr)#
+#   Q10 <- data.frame(rbind(Q10, q10))#
+# }#
+# q <- round(mean(Q10[,1], na.rm=T),1)#
+# q.lwr <- round(mean(Q10[,2], na.rm=T),1)#
+# q.upr <- round(mean(Q10[,3], na.rm=T),1)#
+# print(paste0("Q10 = ", q, " (",q.upr," - ",q.lwr,")"))#
+plot(c(min(GR$lon,na.rm=T)-5,max(GR$lon,na.rm=T)+5) , range(GR$lat,na.rm=T), pch=NA, asp=1, las=1, xlab="Lon (˚W)", ylab="Lat (˚N)")#
+  i <- 1#
+  for(cruise in unique(GR[,para])){#
+      GR2 <- subset(GR, GR[,para] == cruise)#
+      GR2 <- GR2[order(GR2$lat),]#
+      points(GR2$lon, GR2$lat, pch=21, col='grey', bg=alpha(cols(length(unique(GR[,para])))[i],0.5), cex=cex)#
+      i <- 1 + i#
+  }#
+  map("world", fill = T, col = "black", add = TRUE)#
+  mtext("A", at=par("usr")[4], side=2, line=3,cex=cex*2, las=1)#
+  nut <- "PO4"#
+  plotCI(GR$temperature,GR[,nut],GR$temperature.sd, err='x', pch=NA, col='grey', sfrac=0, lwd=2, ylab=paste(nut, "(nM)"), xlab="Temp (˚C)",las=1)#
+  i <- 1#
+  for(cruise in unique(GR[,para])){#
+      GR2 <- subset(GR, GR[,para] == cruise)#
+      points(GR2$temperature,GR2[,nut],  pch=21, col='lightgrey',bg=alpha(cols(length(unique(GR[,para])))[i],0.5), cex=cex)#
+      i <- 1 + i#
+  }#
+  fit <- lm(GR[,nut] ~ poly(temperature,1,raw=T), GR)#
+  summary(fit)#
+  pred <- predict.lm(fit, newdata=data.frame(temperature=temp), interval='confidence')#
+  lines(temp, pred[,'fit'], lwd=2, col='red3')#
+  mtext("C", at=par("usr")[4], side=2, line=3,cex=cex*2, las=1)#
+#
+par(def.par)#
+#
+dev.off()
+#####################################
+### 1. SET FILTRATION PARAMETERS ####
+#####################################
+df <- c("MBARI1",47814,24114,22436,#
+"SCOPE6",49664,16840,17669,#
+"DeepDOM",48977,19167,19617,#
+"Gradient1",51625,34693,33630)#
+beads.coord <- data.frame(matrix(df, 4,4, byrow=T),stringsAsFactors=F)#
+colnames(beads.coord) <- c("cruise","fsc","d1","d2")#
+#Path to the Git repository#
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+gate <- FALSE#
+allcruises <- c("SCOPE6", "DeepDOM", "MBARI1","Gradient1")#
+#
+for(cruise in allcruises){#
+#
+  #cruise <- allcruises[1]#
+#
+  print(cruise)#
+  ### Get EVT list#
+  if(cruise == "SCOPE6" | cruise == "Gradient1") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)#
+  if(cruise == "DeepDOM"| cruise == "MBARI1") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)#
+#
+  if(cruise == "SCOPE6") inst <- 740#
+  if(cruise == "DeepDOM" | cruise == "MBARI1") inst <- 989#
+  if(cruise == "Gradient1") inst <- 751#
+#
+  # SLOPES#
+  slopes <- read.csv("seaflow_filter_slopes.csv")#
+#
+  # BEADS#
+  beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"fsc"])#
+  beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d1"])#
+  beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d2"])#
+#
+width <- 2500#
+ALL <- NULL#
+#
+for (file in list){#
+#
+  #file <- list[4]#
+  print(file)#
+#
+  evt <- readSeaflow(file,transform=F)#
+#
+  # Filtering noise#
+  evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]#
+#
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2#
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)#
+#
+    if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)#
+      } else aligned. <- aligned#
+#
+    if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)#
+      } else df <- evt.#
+    # par(mfrow=c(2,2))#
+    # plot.cytogram(df, "D1", "D2"); abline(b=notch, a=origin)#
+    # plot.cytogram(aligned., "D1", "D2"); abline(b=1, a=origin)#
+    # plot.cytogram(df, "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)#
+    # plot.cytogram(df, "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)#
+#
+    screening <- c(-12500,-10000,-7500,-5000,-2500,0,2500,5000,7500,10000,12500, 1, 2, 3)#
+#
+  for(corr in screening){#
+#
+  print(paste("corr=", corr))#
+  notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+  notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+  notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']#
+  notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']#
+  offset.small.D1 <- round(beads.d1 - notch.small.D1 * beads.fsc) + corr#
+  offset.small.D2 <- round(beads.d2 - notch.small.D2 * beads.fsc) + corr#
+  offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + corr#
+  offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + corr#
+    if(corr == 1){#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']#
+      notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']#
+      }#
+#
+    if(corr == 2){#
+      offset.small.D1 <- 0#
+      offset.small.D2 <- 0#
+      notch.small.D1 <- beads.d1/beads.fsc#
+      notch.small.D2 <- beads.d2/beads.fsc#
+      }#
+#
+    if(corr == 3){#
+        if(offset.small.D1 < 0 | offset.small.D2 < 0){#
+                    offset.small.D1 <- 0#
+                    offset.small.D2 <- 0#
+                    notch.small.D1 <- beads.d1/beads.fsc#
+                    notch.small.D2 <- beads.d2/beads.fsc}#
+        }#
+#
+      opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |#
+        D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)#
+      if(nrow(opp) < 10) next#
+#
+      opp$pop <- 0#
+      opp. <- subset(opp, fsc_small > 1)#
+#
+      print("Beads")#
+        if(gate) {plot.cytogram(opp , "fsc_small", "pe")#
+                        poly.beads <- getpoly(quiet=TRUE)#
+                        write.csv(poly.beads,paste0(cruise,"data/", basename(file),"-polybeads.csv"),quote=F, row.names=F)#
+                      }#
+        poly.beads <-  read.csv(paste0(cruise,"data/", basename(file),"-polybeads.csv"))#
+        b <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+        opp[row.names(b),'pop'] <- "beads"#
+#
+      print("Syn")#
+        if(gate) {poly.syn <- getpoly(quiet=TRUE)#
+                        write.csv(poly.syn,paste0(cruise,"data/", basename(file),"-polysyn.csv"),quote=F, row.names=F)#
+                      }#
+        poly.syn <-  read.csv(paste0(cruise,"data/", basename(file),"-polysyn.csv"))#
+        s <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.syn, bound=TRUE, quiet=TRUE))#
+        opp[row.names(s),'pop'] <- "synecho"#
+#
+      print("Pro")#
+      x <- subset(opp, pop==0)#
+        if(gate){plot.cytogram(opp , "fsc_small", "chl_small")#
+                        poly.pro <- getpoly(quiet=TRUE)#
+                        write.csv(poly.pro,paste0(cruise,"data/", basename(file),"-polypro.csv"),quote=F, row.names=F)#
+                      }#
+        poly.pro <-  read.csv(paste0(cruise,"data/", basename(file),"-polypro.csv"))#
+        p <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pro, bound=TRUE, quiet=TRUE))#
+        opp[row.names(p),'pop'] <- "prochloro"#
+#
+      print("Pico")#
+      x <- subset(opp, pop==0)#
+      if(gate) { poly.pico <- getpoly(quiet=TRUE)#
+                      write.csv(poly.pico,paste0(cruise,"data/", basename(file),"-polypico.csv"),quote=F, row.names=F )#
+                    }#
+      poly.pico <-  read.csv(paste0(cruise,"data/", basename(file),"-polypico.csv"))#
+      l <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pico, bound=TRUE, quiet=TRUE))#
+      opp[row.names(l),'pop'] <- "pico"#
+    if(corr == 0 | corr == 1 | corr == 2| corr == 3){#
+          png(paste0(cruise,"data/", basename(file),"-offset",corr,".png"),width=9, height=12, unit='in', res=100)#
+#
+          if(nrow(opp)> 100000){opp. <- sample_n(opp, 100000)#
+             } else opp. <- opp#
+          par(mfrow=c(2,2))#
+          plot.cytogram(aligned. ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)#
+          plot.cytogram(aligned. , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)#
+          plot.vct.cytogram(opp. , "fsc_small", "pe")#
+          plot.vct.cytogram(opp. , "fsc_small", "chl_small")#
+#
+          dev.off()#
+      }#
+#
+      n.opp <- nrow(opp)#
+      n.opp. <- nrow(opp.)#
+      n.evt <- nrow(evt)#
+      n.evt. <- nrow(evt.)#
+      beads <- nrow(b)#
+      syn <- nrow(s)#
+      pro <- nrow(p)#
+      pico <- nrow(l)#
+      filename <- basename(file)#
+      if(cruise == 'MBARI1' | cruise == 'DeepDOM') filename <- paste(basename(dirname(file)),basename(file),sep="/")#
+#
+      all <- data.frame(cbind(file=filename, n.opp, n.opp., n.evt, n.evt., beads, pro, syn, pico, offset.small.D1, offset.large.D1,offset.small.D2, offset.large.D2, width, corr))#
+#
+      ALL <- rbind(ALL, all)#
+#
+    }#
+  }#
+#
+write.csv(ALL, paste0(cruise,"data/seaflow-summary.csv"), quote=F, row.names=F)#
 }
