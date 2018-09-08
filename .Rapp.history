@@ -1,51 +1,3 @@
-colnames(stat)[-c(1,22,24,26,28)]
-colnames(stat)
-para <- colnames(stat)[-c(1,21,23,25,27,29)]
-para
-para <- colnames(stat)[-c(1,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df.mean)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df.mean)
-para <- c("fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)#
-      colnames(df.sd) <- paste0(para,".se")
-DF <- cbind(df.mean,df.sd)
-head(DF)
-para <- c("fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)
-head(df.sd)
-df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c("time","population")]
-df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]
-head(df.sd)
-colnames(df.sd) <- paste0(para,".se")
-head(df.sd)
-DF <- cbind(df.mean,df.sd)
-head(DF)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-head(DF)
-DF <- cbind(stat$file, df.mean,df.sd)
-nrow(df)
-nrow(df.mean)
-DF <- cbind(unique(stat$file), df.mean,df.sd)
 head(df.mean)
 head(df.mean,50)
 nrow(df)
@@ -1079,17 +1031,6 @@ par(mfrow=c(4,2))#
     plot.time(clean, popname='prochloro', param='Cbiomass')#
     plot.time(clean, popname='picoeuk', param='Cbiomass')
 sqrt(1.5^2 + 4^2)
-library(popcycle)#
-library(dplyr)#
-cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3", "seagreen3", "yellow", "orangered2", "darkred"))#
-##########################################
-## 0. DOWNLOAD THE RAW DATA using DAT ####
-##########################################
-dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63#
-#
-#Path to the raw data (DAT)#
-path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 library(lattice)#
 library(lmodel2)#
 library(popcycle)#
@@ -1214,12 +1155,354 @@ if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="
 #
   }#
 write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
-drr <- read.csv(system.file("flowrate", "detectable_region.csv",package='popcycle'))
-drr
-mean(drr[which(drr$seaflow_serial == inst), "detectable_region_ratio"])
-inst
-which(drr$seaflow_serial == inst)
-drr.mean <- mean(drr[which(drr$seaflow_serial == inst), "detectable_region_ratio"])
-drr <- read.csv(system.file("flowrate", "detectable_region.csv",package='popcycle'))
-drr <- read.csv(system.file("flowrate", "detectable_region.csv",package='popcycle'))
-drr.mean <- mean(drr[which(drr$seaflow_serial == inst), "detectable_region_ratio"])
+###################
+### 3. BEST VC ####
+###################
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+DF <- read.csv("SeaflowInflux_comparison.csv")#
+#
+DF$time <- as.POSIXct(DF$time, tz='GMT')#
+DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
+DF.a$cruise <- DF.a$Group.1#
+#
+# add a color for each cruise#
+i <- 1#
+for(cruise in unique(DF$cruise)){#
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
+    i <- i + 1#
+  }#
+VC <- NULL#
+par(mfrow=c(4,3),cex=1.2, pty='m')#
+for(c in unique(DF$cruise)){#
+  print(c)#
+    df <- subset(DF.a, cruise == c)#
+    for (phyto in c('pro','syn','pico')){#
+      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
+      for(s in 1:4){#
+        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
+        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
+        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
+        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
+        vc <- data.frame(cbind(each, median))#
+        vc$cruise <- c#
+        vc$phyto <- phyto#
+        vc$vc.method <- s#
+        VC <- rbind(VC, vc)#
+        }#
+    }#
+  }#
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
+   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
+   print(paste("best VC method is:",best.vc.method))
+###################
+### 3. BEST VC ####
+###################
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
+DF <- read.csv("SeaflowInflux_comparison.csv")#
+#
+DF$time <- as.POSIXct(DF$time, tz='GMT')#
+DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
+DF.a$cruise <- DF.a$Group.1#
+#
+# add a color for each cruise#
+i <- 1#
+for(cruise in unique(DF$cruise)){#
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
+    i <- i + 1#
+  }#
+VC <- NULL#
+par(mfrow=c(4,3),cex=1.2, pty='m')#
+for(c in unique(DF$cruise)){#
+  print(c)#
+    df <- subset(DF.a, cruise == c)#
+    for (phyto in c('pro','syn','pico')){#
+      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
+      for(s in 1:4){#
+        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
+        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
+        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
+        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
+        vc <- data.frame(cbind(each, median))#
+        vc$cruise <- c#
+        vc$phyto <- phyto#
+        vc$vc.method <- s#
+        VC <- rbind(VC, vc)#
+        }#
+    }#
+  }#
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
+   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
+   print(paste("best VC method is:",best.vc.method))
+#######################
+### 4. BEST OFFSET ####
+#######################
+library(scales)#
+#
+s <- best.vc.method#
+REG <- NULL#
+for(offset in unique(DF$corr)){#
+  df <- subset(DF, corr==offset)#
+  reg.pro <- lm(df[,paste0("pro.seaflow.each",s)] ~ pro.influx, data=df)#
+  reg.syn <- lm(df[,paste0("syn.seaflow.median",s)] ~ syn.influx, data=df)#
+  reg.pico <- lm(df[,paste0("pico.seaflow.median",s)] ~ pico.influx, data=df)#
+  reg <- data.frame(cbind(offset, reg.pro=reg.pro$coefficient[2], reg.syn=reg.syn$coefficient[2], reg.pico=reg.pico$coefficient[2]))#
+  REG <- rbind(REG, reg)#
+}#
+REG$reg.all <- rowMeans(abs(REG[,c("reg.pro", "reg.syn", "reg.pico")]-1))#
+best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']#
+print(paste("best OFFET is:",best.offset))
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370), las=1); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370),las=1); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150),las=1); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50),las=1); abline(b=1, a=0, lty=2)
+t <- 0.6#
+par(mfrow=c(4,3), pty='m',cex=1.2)#
+  df2 <- subset(DF, corr==best.offset)#
+  for(c in rev(unique(df2$cruise))){#
+    df <- subset(df2, cruise == c)#
+    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")])/2, max(df[,paste0("pro.influx")])*1.5), las=1)#
+    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))#
+    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")])/2, max(df[,paste0("syn.influx")])*2), las=1)#
+    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
+    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)#
+    plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")])/2, max(df[,paste0("pico.influx")])*2), las=1)#
+    points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
+#
+    print(c)#
+    print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))#
+    print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))#
+    print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))#
+  }
+png(paste0("SeaFlowInflux-ALLcomparison.png"),width=12, height=15, unit='in', res=500)#
+#
+t <- 0.4#
+par(mfrow=c(3,2), pty='s',cex=1.2)#
+  df <- subset(DF, corr==best.offset)#
+  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370), las=1); abline(b=1, a=0, lty=2)#
+    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
+    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370),las=1); abline(b=1, a=0, lty=2)#
+  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)#
+    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150),las=1); abline(b=1, a=0, lty=2)#
+  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)#
+    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50),las=1); abline(b=1, a=0, lty=2)#
+#
+dev.off()#
+png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=12, height=15, unit='in', res=500)#
+#
+t <- 0.6#
+par(mfrow=c(4,3), pty='m',cex=1.2)#
+  df2 <- subset(DF, corr==best.offset)#
+  for(c in rev(unique(df2$cruise))){#
+    df <- subset(df2, cruise == c)#
+    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")])/2, max(df[,paste0("pro.influx")])*1.5), las=1)#
+    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))#
+    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")])/2, max(df[,paste0("syn.influx")])*2), las=1)#
+    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
+    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)#
+    plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")])/2, max(df[,paste0("pico.influx")])*2), las=1)#
+    points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
+#
+    print(c)#
+    print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))#
+    print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))#
+    print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))#
+  }#
+#
+dev.off()#
+print(mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")])))#
+print(mean(df2[,paste0("syn.seaflow.median",s)]/mean(df2[,paste0("syn.influx")])))#
+print(mean(df2[,paste0("pico.seaflow.median",s)]/mean(df2[,paste0("pico.influx")])))
+mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")]))
+d1 <- mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")]))#
+d2 <- mean(df2[,paste0("syn.seaflow.median",s)]/mean(df2[,paste0("syn.influx")]))#
+d3 <- mean(df2[,paste0("pico.seaflow.median",s)]/mean(df2[,paste0("pico.influx")]))#
+print(d1, d2, d3)
+1
+df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")])
+d1 <- mean(df2[,paste0("pro.seaflow.each",s)])/mean(df2[,paste0("pro.influx")])#
+d2 <- mean(df2[,paste0("syn.seaflow.median",s)])/mean(df2[,paste0("syn.influx")])#
+d3 <- mean(df2[,paste0("pico.seaflow.median",s)])/mean(df2[,paste0("pico.influx")])#
+pr
+print(d1, d2, d3)
+d1
+d2
+d3
+print(d1, d2, d3)
+print(paste(d1, d2, d3))
+print(paste(mean(c(d1,d2,d3))))
+17*1.35
+16.6*1.3
+d1 <- mean(df2[,paste0("pro.seaflow.each",s)])/mean(df2[,paste0("pro.influx")])#
+d2 <- mean(df2[,paste0("syn.seaflow.median",s)])/mean(df2[,paste0("syn.influx")])#
+d3 <- mean(df2[,paste0("pico.seaflow.median",s)])/mean(df2[,paste0("pico.influx")])#
+print(paste(d1, d2, d3))#
+print(paste(mean(c(d1,d2,d3))))
+setwd("~/Documents/DATA/Codes/seaflow-sfl")#
+#
+inst <- "751" # or "751"#
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+fr$fr <- 60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
+#
+inst <- "751" # or "751"#
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+fr$fr <- 60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
+fr
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.35 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
+#
+inst <- "751" # or "751"#
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.2 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
+zero <- 1.25 #correction for pressure sensor not being zero'ed.
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.25 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
+### Path to the Git repository#
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
+#
+inst <- "751" # or "751"#
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.25 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)#
+#
+save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
+#
+png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
+#
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
+#
+dev.off()
+inst <- "740" # #
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.25 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)#
+#
+save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
+#
+png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
+#
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
+#
+dev.off()
+inst <- "989" #
+#
+fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
+zero <- 1.25 #correction for pressure sensor not being zero'ed.#
+fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
+### linear regression#
+reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+summary(reg)#
+#
+save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
+#
+png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
+#
+par(mfrow=c(1,1), cex=1.4)#
+  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
+  par(new=T)#
+  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
+  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
+  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
+  abline(v=log10(12),col='green')#
+  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
+  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
+#
+dev.off()

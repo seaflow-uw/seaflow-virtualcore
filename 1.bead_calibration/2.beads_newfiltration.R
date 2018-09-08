@@ -146,7 +146,7 @@ ALL <- rbind(ALL, all)
 }
 }
 
-write.csv(ALL, paste0("/1.bead_calibration/",inst,"-beads_count.csv"), quote=F, row.names=F)
+write.csv(ALL, paste0("1.bead_calibration/",inst,"-beads_count.csv"), quote=F, row.names=F)
 
 }
 
@@ -165,27 +165,26 @@ write.csv(ALL, paste0("/1.bead_calibration/",inst,"-beads_count.csv"), quote=F, 
 ###########
 for(ins in c(989,751,740)){
 
-ref <- read.csv("/1.bead_calibration/beadcal_data_FR.csv")
+ref <- read.csv("1.bead_calibration/beadcal_data_FR.csv")
 ref. <- subset(ref, inst == ins)
 ref.$col <- 1
 id <- which((grepl("oligo", ref.$file))==T)
 ref.[id, 'col'] <- 2
 
 
-if(ins == 740) VC <- 0.136
-if(ins == 751) VC <- 0.143
-if(ins == 989) VC <- 0.149
+ddr <- read.csv("detectable_region.csv")
+VC <- mean(drr[which(ddr$seaflow_serial == ins), "detectable_region_ratio"])
 
-fr <- read.csv("/1.bead_calibration/beadcalruntimes_flowrates.csv")
+fr <- read.csv("1.bead_calibration/beadcalruntimes_flowrates.csv")
 fr$filename <- paste0(ins,"_caldata/",fr$FILE.NAME,".evt")
 fr$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(fr$file,"_"))))[,5], ))
 
-png(paste0("/1.bead_calibration/",ins,"-Influx-vs-SeaFlow.png"),width=12, height=9, unit='in', res=100)
+png(paste0("1.bead_calibration/",ins,"-Influx-vs-SeaFlow.png"),width=12, height=9, unit='in', res=100)
 par(mfrow=c(1,2), pty='s')
 
 #for(corr in c(2500,5000,7500,10000)){
 corr <- 7500
-  ALL <- read.csv(paste0("/1.bead_calibration/",ins,"-beads_count.csv"))
+  ALL <- read.csv(paste0("1.bead_calibration/",ins,"-beads_count.csv"))
   #ALL$beads.size <- as.numeric(sub("um.evt","",t(data.frame(list(strsplit(as.character(ALL$file),"_"))))[,5], ))
       # plot(ALL$beads.size, ALL$opp.evt.ratio, col=round(ALL$offset/2000))
   ALL <- subset(ALL, offset == corr)
