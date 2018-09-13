@@ -6,7 +6,7 @@ cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3", "seagreen3", "
 #########################################
 ## 0. DOWNLOAD THE RAW DATA using DAT ###
 #########################################
-dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63
+# dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63
 
 #Path to the raw data (DAT)
 path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"
@@ -125,7 +125,7 @@ for (file in list){
       if(nrow(opp) < 10) next
 
       opp$pop <- 0
-      opp. <- subset(opp, fsc_small > 1)
+      opp. <- subset(opp, fsc_small > 2000)
 
       print("Beads")
         if(gate) {plot.cytogram(opp , "fsc_small", "pe")
@@ -285,7 +285,7 @@ if(cruise == "SCOPE_6") inst <- 740
 if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
 if(cruise == "SCOPE_16") inst <- 751
 
-ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))
+ALL <- read.csv(paste0(cruise,"data/seaflow-summary2.csv"))
 if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]
 if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]
 
@@ -297,6 +297,7 @@ if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="
   sfl$flow_rate2 <- flowrate(sfl, inst =inst)[,"flow_rate"]
   ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate
 
+sfl <- flowrate(sfl, inst =inst)
   # add abundance from INFLUX
   id <- findInterval(ALL$time,influx$time)
   if(cruise =="DeepDOM"| cruise == "SCOPE_16") id <- id +1
@@ -480,8 +481,6 @@ par(mfrow=c(4,3), pty='m',cex=1.2)
     print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))
     print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))
     print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))
-
-
   }
 
 dev.off()
