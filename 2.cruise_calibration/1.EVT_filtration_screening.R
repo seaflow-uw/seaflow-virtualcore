@@ -17,13 +17,7 @@ path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-
 ####################################
 ### 1. SET FILTRATION PARAMETERS ###
 ####################################
-df <- c("MBARI_1",47814,24114,22436,
-"SCOPE_6",49664,16840,17669,
-"DeepDOM",48977,19167,19617,
-"SCOPE_16",51625,34693,33630)
-beads.coord <- data.frame(matrix(df, 4,4, byrow=T),stringsAsFactors=F)
-colnames(beads.coord) <- c("cruise","fsc","d1","d2")
-
+beads.coord <- read.csv("https://raw.githubusercontent.com/armbrustlab/seaflow-filter/master/ALL-filterparams.csv")
 
 
 #Path to the Git repository
@@ -31,18 +25,20 @@ setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
 
 gate <- FALSE
-allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16")
+allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
 
 for(cruise in allcruises){
 
-  #cruise <- allcruises[1]
+  #cruise <- allcruises[5]
 
   print(cruise)
   ### Get EVT list
   if(cruise == "SCOPE_6" | cruise == "SCOPE_16") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)
-  if(cruise == "DeepDOM"| cruise == "MBARI_1") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)
+  if(cruise == "DeepDOM"| cruise == "MBARI_1" | cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)
+  if(cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt",full.names=T, recursive=T)
 
-  if(cruise == "SCOPE_6") inst <- 740
+
+  if(cruise == "SCOPE_6" | cruise == "Thompson_9") inst <- 740
   if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
   if(cruise == "SCOPE_16") inst <- 751
 
@@ -50,9 +46,9 @@ for(cruise in allcruises){
   slopes <- read.csv("seaflow_filter_slopes.csv")
 
   # BEADS
-  beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"fsc"])
-  beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d1"])
-  beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise),"d2"])
+  beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.fsc.small"])
+  beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D1"])
+  beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D2"])
 
 width <- 2500
 ALL <- NULL
@@ -187,9 +183,7 @@ for (file in list){
       syn <- nrow(s)
       pro <- nrow(p)
       pico <- nrow(l)
-      filename <- basename(file)
-      if(cruise == 'MBARI_1' | cruise == 'DeepDOM') filename <- paste(basename(dirname(file)),basename(file),sep="/")
-
+      filename <- paste(basename(dirname(file)),basename(file),sep="/")
       all <- data.frame(cbind(file=filename, n.opp, n.opp., n.evt, n.evt., beads, pro, syn, pico, offset.small.D1, offset.large.D1,offset.small.D2, offset.large.D2, width, corr))
 
       ALL <- rbind(ALL, all)
@@ -225,23 +219,18 @@ library(popcycle)
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
-allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16")
-cruise <- allcruises[2]
+allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
+cruise <- allcruises[4]
 DF <- NULL
 for(cruise in allcruises){
 
 print(cruise)
 
-### SFL + INFLUX
-if(cruise == 'DeepDOM'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))
-                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")
-                      influx <- read.delim(paste0(cruise,"data/surface_samples_metadata.tab"))
-                        influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")
+### REFERENCE ABUNDANCE from INFLUX
+if(cruise == 'DeepDOM'){influx <- read.csv(paste0(cruise,"data/surface_samples_metadata.csv"))
+                          influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")
                         }
-if(cruise == 'SCOPE_16'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))
-                            sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")
-                            sfl$file <- basename(as.character(sfl$file))
-                          influx <- read.csv(paste0(cruise,"data/all_station_curated.csv"))
+if(cruise == 'SCOPE_16'){influx <- read.csv(paste0(cruise,"data/all_station_curated.csv"))
                             influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")
                             influx <- influx[order(influx$time_HST), ]
                             influx <- subset(influx, Depth_m < 16)
@@ -251,65 +240,77 @@ if(cruise == 'SCOPE_16'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))
                           influx <- data.frame(cbind(time=pro$time_HST, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance))
                             influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")
                               }
-if(cruise == 'MBARI_1'){sfl <- read.delim(paste0(cruise,"data/cruise.sfl"))
-                        sfl$date <- as.POSIXct(sfl$DATE, format = "%FT%T", tz = "GMT")
-                        sfl$file <- sfl[,"FILE"]
-                        sfl$stream_pressure <- sfl[,"STREAM.PRESSURE"]
-                      influx <- read.csv(paste0(cruise,"data/mbari_summary.csv"))
-                        id <- match(influx[,'file'],sfl[,"FILE"])
-                        influx$time <- sfl[id, 'date']
-                        influx$pro <- influx$pro / 1000
-                        influx$syn <- influx$syn / 1000
-                        influx$pico <- influx$picoeuks / 1000
+if(cruise == 'MBARI_1'){  sfl <- read.delim(paste0(cruise,"data/cruise.sfl"))
+                          sfl$date <- as.POSIXct(sfl$DATE, format = "%FT%T", tz = "GMT")
+                          influx <- read.csv(paste0(cruise,"data/mbari_summary.csv"))
+                          id <- match(influx[,'file'],sfl[,"FILE"])
+                          influx$time <- sfl[id, 'date']
+                          influx$pro <- influx$pro / 1000
+                          influx$syn <- influx$syn / 1000
+                          influx$pico <- influx$picoeuks / 1000
                           }
-if(cruise == 'SCOPE_6'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))
-                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")
-                        sfl$stream_pressure <- median(sfl$stream_pressure, na.rm=T)
-                        sfl$file <- basename(as.character(sfl$file))
-                      influx <- read.csv(paste0(cruise,"data/influx.csv"))
-                        influx$time <- as.POSIXct(influx$time, tz="GMT")
-                        pro <- subset(influx, pop == 'prochloro')
-                        syn <- subset(influx, pop == 'synecho')
-                        picoeuk <- subset(influx, pop == 'picoeuk')
-                        crocco <- subset(influx, pop == 'crocco')
-                          influx <- data.frame(cbind(time=pro$time, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance+crocco$abundance))
+if(cruise == 'SCOPE_6'){influx <- read.csv(paste0(cruise,"data/influx.csv"))
+                          influx$time <- as.POSIXct(influx$time, tz="GMT")
+                          pro <- subset(influx, pop == 'prochloro')
+                          syn <- subset(influx, pop == 'synecho')
+                          picoeuk <- subset(influx, pop == 'picoeuk')
+                          crocco <- subset(influx, pop == 'crocco')
+                        influx <- data.frame(cbind(time=pro$time, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance+crocco$abundance))
                           influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")
                         }
 
+if(cruise == 'Thompson_9'){pre.influx <- read.csv(paste0(cruise,"data/merged_summary_sds.csv"))
+                            pre.influx$time <- as.POSIXct(pre.influx$local.time, format="%m/%d/%y %H:%M", tz="HST")
+                            influx <- aggregate(pre.influx, by=list(pre.influx$fcs.file, pre.influx$i), FUN=mean)
+                              pro <- subset(influx, Group.2 == 'prochloro')
+                              syn <- subset(influx, Group.2 == 'synecho')
+                            influx <- data.frame(cbind(time=pro$time, pro=pro$conc, syn=syn$conc, pico=NA))
+                              influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")
+                        }
 
 influx <- influx[order(influx$time), ]
 
 
-### SEAFLOW
-if(cruise == "SCOPE_6") inst <- 740
+### SFL
+if(cruise == "SCOPE_6" | cruise == "Thompson_9") inst <- 740
 if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
 if(cruise == "SCOPE_16") inst <- 751
 
-ALL <- read.csv(paste0(cruise,"data/seaflow-summary2.csv"))
+if(cruise != 'MBARI_1'){
+      sfl <- read.delim(paste0("https://raw.githubusercontent.com/armbrustlab/seaflow-sfl/master/curated/", cruise,"_",inst, ".sfl"))
+      sfl$date <- as.POSIXct(sfl$DATE, format="%FT%T", tz='GMT')
+      }
+
+### SEAFLOW DATA
+ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))
 if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]
 if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]
+if(cruise == "Thompson_9") ALL$file <- sub(".gz","", ALL$file)
 
   ALL$cruise <- cruise
-  id2 <- match(ALL[,'file'],as.character(sfl[,"file"]))
+  id2 <- match(ALL[,'file'],as.character(sfl[,"FILE"]))
+
   ALL$time <- sfl[id2, 'date'] # add time
     ALL <- ALL[order(ALL$time), ]
 
-  sfl$flow_rate2 <- flowrate(sfl, inst =inst)[,"flow_rate"]
+  sfl$flow_rate2 <- flowrate(sfl$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
   ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate
 
-sfl <- flowrate(sfl, inst =inst)
   # add abundance from INFLUX
   id <- findInterval(ALL$time,influx$time)
-  if(cruise =="DeepDOM"| cruise == "SCOPE_16") id <- id +1
+  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9") id <- id +1
   for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]
 
 
 
   ############### TEST different VC method ###################################
-  ALL$vc1 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
-  ALL$vc2 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
-  ALL$vc3 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
-  ALL$vc4 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
+  corr <- 1
+  if(cruise == "Thompson_9") corr <- 0.14 # correction factor due to troncated D1 / D2 (based on Seaflow_uncorrected abundance / influx)
+
+  ALL$vc1 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
+  ALL$vc2 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
+  ALL$vc3 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
+  ALL$vc4 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
 
 
 
@@ -324,6 +325,8 @@ sfl <- flowrate(sfl, inst =inst)
       ALL[,paste0(phyto,'.seaflow.each4')] <- ALL[,phyto] / ALL$vc4
       ALL[,paste0(phyto,'.seaflow.median4')] <- ALL[,phyto] / median(ALL$vc4)
       }
+
+      if(cruise == "Thompson_9") for(s in 1:4) ALL[,paste0('pro.seaflow.each',s)] <- ALL[,paste0('pro.seaflow.each',s)] + 150 # correction factor due to troncated D1 / D2 (based on Seaflow_corrected abundance - influx)
 
           # par(mfrow=c(3,1),cex=1.2)
           # for (phyto in c('pro','syn','pico')){
@@ -377,8 +380,8 @@ write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
 ##################
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 DF <- read.csv("SeaflowInflux_comparison.csv")
-
 DF$time <- as.POSIXct(DF$time, tz='GMT')
+
 DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)
 DF.a$cruise <- DF.a$Group.1
 
@@ -391,15 +394,15 @@ for(cruise in unique(DF$cruise)){
 
 
 VC <- NULL
-par(mfrow=c(4,3),cex=1.2, pty='m')
+par(mfrow=c(5,3),cex=1.2, pty='m')
 for(c in unique(DF$cruise)){
   print(c)
     df <- subset(DF.a, cruise == c)
     for (phyto in c('pro','syn','pico')){
-      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))
+  #    plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))
       for(s in 1:4){
-        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)
-        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)
+#        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)
+#        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)
         each <- mean(df[,paste0(phyto, ".diff.each",s)])
         median <- mean(df[,paste0(phyto, ".diff.median",s)])
         vc <- data.frame(cbind(each, median))
@@ -412,7 +415,7 @@ for(c in unique(DF$cruise)){
   }
 
 
-   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)
+   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), FUN=function(x) mean(x, na.rm=T))
    best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))
    print(paste("best VC method is:",best.vc.method))
 
@@ -445,6 +448,36 @@ best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']
 print(paste("best OFFET is:",best.offset))
 
 
+
+png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=12, height=15, unit='in', res=500)
+
+t <- 0.6
+par(mfrow=c(5,3), pty='m',cex=1.2, mar=c(2,3,2,1))
+  df2 <- subset(DF, corr==best.offset)
+  for(c in unique(df2$cruise)){
+    df <- subset(df2, cruise == c)
+    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")], na.rm=T)/2, max(df[,paste0("pro.influx")], na.rm=T)*1.5), las=1)
+    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))
+    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")], na.rm=T)/2, max(df[,paste0("syn.influx")], na.rm=T)*2), las=1)
+    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))
+    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)
+    if(c == "Thompson_9"){
+        plot(df[,"time"], rep(1, nrow(df)), pch=NA)
+        legend("center", "NA", bty='n')
+      }else{
+        plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")], na.rm=T)/2, max(df[,paste0("pico.influx")], na.rm=T)*2), las=1)
+        points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))}
+
+    print(c)
+    print(mean(df[,paste0("pro.seaflow.each",s)], na.rm=T)/mean(df[,paste0("pro.influx")], na.rm=T))
+    print(mean(df[,paste0("syn.seaflow.median",s)], na.rm=T)/mean(df[,paste0("syn.influx")], na.rm=T))
+    print(mean(df[,paste0("pico.seaflow.median",s)], na.rm=T)/mean(df[,paste0("pico.influx")], na.rm=T))
+  }
+
+dev.off()
+
+
+
 png(paste0("SeaFlowInflux-ALLcomparison.png"),width=12, height=15, unit='in', res=500)
 
 t <- 0.4
@@ -459,34 +492,3 @@ par(mfrow=c(3,2), pty='s',cex=1.2)
     plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50),las=1); abline(b=1, a=0, lty=2)
 
 dev.off()
-
-
-
-png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=12, height=15, unit='in', res=500)
-
-t <- 0.6
-par(mfrow=c(4,3), pty='m',cex=1.2)
-  df2 <- subset(DF, corr==best.offset)
-  for(c in rev(unique(df2$cruise))){
-    df <- subset(df2, cruise == c)
-    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")])/2, max(df[,paste0("pro.influx")])*1.5), las=1)
-    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))
-    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")])/2, max(df[,paste0("syn.influx")])*2), las=1)
-    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))
-    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)
-    plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")])/2, max(df[,paste0("pico.influx")])*2), las=1)
-    points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))
-
-    print(c)
-    print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))
-    print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))
-    print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))
-  }
-
-dev.off()
-
-d1 <- mean(df2[,paste0("pro.seaflow.each",s)])/mean(df2[,paste0("pro.influx")])
-d2 <- mean(df2[,paste0("syn.seaflow.median",s)])/mean(df2[,paste0("syn.influx")])
-d3 <- mean(df2[,paste0("pico.seaflow.median",s)])/mean(df2[,paste0("pico.influx")])
-print(paste(d1, d2, d3))
-print(paste(mean(c(d1,d2,d3))))
