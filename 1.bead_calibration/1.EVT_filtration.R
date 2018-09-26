@@ -110,7 +110,7 @@ par(mfrow=c(3,2))
   for(ins in c(989,751,740)){
   print(ins)
 
-  ALL <- read.csv(paste0("/1.bead_calibration/",ins,"-summary.csv"))
+  ALL <- read.csv(paste0("1.bead_calibration/",ins,"-summary.csv"))
     ALL$pmt <- 'coastal'
     id <- which((grepl("oligo", ALL$file))==T)
     ALL[id, "pmt"] <- 'oligo'
