@@ -29,7 +29,7 @@ allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
 
 for(cruise in allcruises){
 
-  #cruise <- allcruises[5]
+  #cruise <- allcruises[3]
 
   print(cruise)
   ### Get EVT list
@@ -50,12 +50,19 @@ for(cruise in allcruises){
   beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D1"])
   beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D2"])
 
-width <- 3000
+  if(cruise == "MBARI_1"){
+      beads.fsc <- 50000
+      beads.d1 <- 32000
+      beads.d2 <- 35000
+  }
+
+
+width <- 5000
 ALL <- NULL
 
 for (file in list){
 
-  #file <- list[4]
+  #file <- list[1]
   print(file)
 
   evt <- readSeaflow(file,transform=F)
@@ -69,15 +76,15 @@ for (file in list){
     if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)
       } else aligned. <- aligned
 
-    if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)
-      } else df <- evt.
+    # if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)
+    #   } else df <- evt.
     # par(mfrow=c(2,2))
     # plot.cytogram(df, "D1", "D2"); abline(b=notch, a=origin)
     # plot.cytogram(aligned., "D1", "D2"); abline(b=1, a=origin)
     # plot.cytogram(df, "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)
-    # plot.cytogram(df, "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
+    # plot.cytogram(df, "fsc_small", "pe"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
 
-    screening <- c(-5000,-2500,0,2500,5000,7500,10000, 1, 2, 3, 4)
+    screening <- c(0,2500,5000,7500,10000, 1, 2, 3, 4)
 
   for(corr in screening){
 
@@ -107,19 +114,19 @@ for (file in list){
     if(corr == 3){
         offset.small.D1 <- 0
         offset.small.D2 <- 0
-        notch.small.D1 <- (beads.d1+width)/beads.fsc
-        notch.small.D2 <- (beads.d1+width)/beads.fsc
-        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + width
-        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + width
+        notch.small.D1 <- (beads.d1+width/2)/beads.fsc
+        notch.small.D2 <- (beads.d1+width/2)/beads.fsc
+        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + width/2
+        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + width/2
         }
 
     if(corr == 4){
         offset.small.D1 <- 0
         offset.small.D2 <- 0
-        notch.small.D1 <- (beads.d1-width)/beads.fsc
-        notch.small.D2 <- (beads.d2-width)/beads.fsc
-        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) - width
-        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) - width
+        notch.small.D1 <- (beads.d1-width/2)/beads.fsc
+        notch.small.D2 <- (beads.d2-width/2)/beads.fsc
+        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) - width/2
+        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) - width/2
         }
 
     opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |
@@ -387,7 +394,14 @@ setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 DF <- read.csv("SeaflowInflux_comparison.csv")
 DF$time <- as.POSIXct(DF$time, tz='GMT')
 
+# add a color for each cruise
+i <- 1
+for(cruise in unique(DF$cruise)){
+    DF[which(DF$cruise == cruise),'col.cruise'] <- i
+    i <- i + 1
+  }
 
+    t <- 0.6
     s <- 2
    df <- subset(DF, corr==2)
    par(mfrow=c(3,2), pty='s',cex=1.2)
@@ -409,13 +423,6 @@ DF$time <- as.POSIXct(DF$time, tz='GMT')
 ##################
 DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)
 DF.a$cruise <- DF.a$Group.1
-
-# add a color for each cruise
-i <- 1
-for(cruise in unique(DF$cruise)){
-    DF[which(DF$cruise == cruise),'col.cruise'] <- i
-    i <- i + 1
-  }
 
 
 VC <- NULL
@@ -469,15 +476,15 @@ df <- subset(DF, corr==3)
 df2 <- subset(DF, corr==2)
 df3 <- subset(DF, corr==4)
 par(mfrow=c(3,3), pty='s',cex=1.2)
-plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
-  plot(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
-  plot(df3[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
-plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
-  plot(df2[,"syn.influx"], df2[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
-  plot(df3[,"syn.influx"], df3[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
-plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,100), ylim=c(0,100)); abline(b=1, a=0, lty=2)
-  plot(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,100), ylim=c(0,100)); abline(b=1, a=0, lty=2)
-  plot(df3[,"pico.influx"], df3[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,100), ylim=c(0,100)); abline(b=1, a=0, lty=2)
+plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(1,500), ylim=c(1,500)); abline(b=1, a=0, lty=2)
+  plot(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,500), ylim=c(0,500)); abline(b=1, a=0, lty=2)
+  plot(df3[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,500), ylim=c(0,500)); abline(b=1, a=0, lty=2)
+plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
+  plot(df2[,"syn.influx"], df2[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
+  plot(df3[,"syn.influx"], df3[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
+plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
+  plot(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
+  plot(df3[,"pico.influx"], df3[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
 
 
 
@@ -506,7 +513,7 @@ par(mfrow=c(5,3), pty='m',cex=1.2, mar=c(2,3,2,1))
     plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=1, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")], na.rm=T)/2, max(df[,paste0("pro.influx")], na.rm=T)*1.5), las=1)
     plotCI(df[,"time"], df[,paste0("pro.seaflow.each",s)], uiw=df.sd[,paste0("pro.seaflow.each",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
     plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=1, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")], na.rm=T)/2, max(df[,paste0("syn.influx")], na.rm=T)*2), las=1)
-    plotCI(df[,"time"], df[,paste0("syn.seaflow.median",s)], uiw=df.sd[,paste0("syn.seaflow.median",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
+    plotCI(df[,"time"], df[,paste0("syn.seaflow.each",s)], uiw=df.sd[,paste0("syn.seaflow.each",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
     legend('top',legend=c("influx","SeaFlow"), pch=c(1,16),bty='n',cex=0.8)
     if(c == "Thompson_9"){
         plot(df[,"time"], rep(1, nrow(df)), pch=NA)
@@ -534,13 +541,13 @@ par(mfrow=c(3,2), pty='s',cex=1.2)
     legend('topleft',legend=unique(df2$cruise),pt.bg=alpha(unique(df2$col.cruise),t), pch=21,bty='n',cex=0.8)
       plotCI(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)],df3[,paste0("pro.seaflow.each",s)], sfrac=0, log='xy', xlab="Influx", ylab='SeaFlow',
         pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Prochlorococcus",ylim=c(5,370),xlim=c(5,370), las=1); abline(b=1, a=0, lty=2)
-  plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.median",s)],df3[,paste0("syn.seaflow.median",s)], sfrac=0,xlab="Influx", ylab='SeaFlow',
+  plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.each",s)],df3[,paste0("syn.seaflow.each",s)], sfrac=0,xlab="Influx", ylab='SeaFlow',
         pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)
-      plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.median",s)],df3[,paste0("syn.seaflow.median",s)], sfrac=0, log='xy', xlab="Influx", ylab='SeaFlow',
+      plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.each",s)],df3[,paste0("syn.seaflow.each",s)], sfrac=0, log='xy', xlab="Influx", ylab='SeaFlow',
         pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Synechococcus",xlim=c(0.5,150),ylim=c(0.5,150),las=1); abline(b=1, a=0, lty=2)
   plotCI(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)],df3[,paste0("pico.seaflow.median",s)], sfrac=0,xlab="Influx", ylab='SeaFlow',
         pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)
       plotCI(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)],df3[,paste0("pico.seaflow.median",s)], sfrac=0,log='xy', xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Picoeukaryotes",xlim=c(0.5,50),ylim=c(0.5,50),las=1); abline(b=1, a=0, lty=2)
+        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Picoeukaryotes",xlim=c(0.2,50),ylim=c(0.2,50),las=1); abline(b=1, a=0, lty=2)
 
 dev.off()
