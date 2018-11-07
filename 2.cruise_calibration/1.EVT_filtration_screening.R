@@ -2,7 +2,6 @@ library(popcycle)
 library(dplyr)
 cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3", "seagreen3", "yellow", "orangered2", "darkred"))
 
-
 #########################################
 ## 0. DOWNLOAD THE RAW DATA using DAT ###
 #########################################
@@ -25,20 +24,22 @@ setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
 
 gate <- FALSE
-allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
+allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
+
 
 for(cruise in allcruises){
 
-  #cruise <- allcruises[3]
+  #cruise <- allcruises[2]
 
   print(cruise)
   ### Get EVT list
-  if(cruise == "SCOPE_6" | cruise == "SCOPE_16") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)
+  if(cruise == "SCOPE_6" | cruise == "SCOPE_16" | cruise == "SCOPE_2") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)
   if(cruise == "DeepDOM"| cruise == "MBARI_1" | cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)
   if(cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt",full.names=T, recursive=T)
+  if(cruise == "SCOPE_2") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)
 
 
-  if(cruise == "SCOPE_6" | cruise == "Thompson_9") inst <- 740
+  if(cruise == "SCOPE_6" | cruise == "Thompson_9" | cruise == "SCOPE_2") inst <- 740
   if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
   if(cruise == "SCOPE_16") inst <- 751
 
@@ -62,7 +63,7 @@ ALL <- NULL
 
 for (file in list){
 
-  #file <- list[1]
+  #file <- list[2]
   print(file)
 
   evt <- readSeaflow(file,transform=F)
@@ -138,7 +139,6 @@ for (file in list){
       opp$pop <- 0
       opp. <- subset(opp, fsc_small > 2000)
 
-      print("Beads")
         if(gate) {plot.cytogram(opp , "fsc_small", "pe")
                         poly.beads <- getpoly(quiet=TRUE)
                         write.csv(poly.beads,paste0(cruise,"data/", basename(file),"-polybeads.csv"),quote=F, row.names=F)
@@ -147,7 +147,6 @@ for (file in list){
         b <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))
         opp[row.names(b),'pop'] <- "beads"
 
-      print("Syn")
         if(gate) {poly.syn <- getpoly(quiet=TRUE)
                         write.csv(poly.syn,paste0(cruise,"data/", basename(file),"-polysyn.csv"),quote=F, row.names=F)
                       }
@@ -155,7 +154,6 @@ for (file in list){
         s <- subset(opp,inout(opp[,c("fsc_small", "pe")],poly=poly.syn, bound=TRUE, quiet=TRUE))
         opp[row.names(s),'pop'] <- "synecho"
 
-      print("Pro")
       x <- subset(opp, pop==0)
         if(gate){plot.cytogram(opp , "fsc_small", "chl_small")
                         poly.pro <- getpoly(quiet=TRUE)
@@ -165,7 +163,6 @@ for (file in list){
         p <- subset(x,inout(x[,c("fsc_small", "chl_small")],poly=poly.pro, bound=TRUE, quiet=TRUE))
         opp[row.names(p),'pop'] <- "prochloro"
 
-      print("Pico")
       x <- subset(opp, pop==0)
       if(gate) { poly.pico <- getpoly(quiet=TRUE)
                       write.csv(poly.pico,paste0(cruise,"data/", basename(file),"-polypico.csv"),quote=F, row.names=F )
@@ -184,9 +181,8 @@ for (file in list){
           par(mfrow=c(2,2))
           plot.cytogram(aligned. ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)
           plot.cytogram(aligned. , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
-          plot.vct.cytogram(opp. , "fsc_small", "pe")
-          plot.vct.cytogram(opp. , "fsc_small", "chl_small")
-
+          plot(opp.[, c("fsc_small", "pe")], cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
+          plot(opp.[, c("fsc_small", "chl_small")], cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
           dev.off()
       }
 
@@ -236,8 +232,9 @@ library(popcycle)
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
-allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
-cruise <- allcruises[4]
+allcruises <- c("SCOPE_6", "SCOPE_2" , "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9")
+cruise <- allcruises[2]
+
 DF <- NULL
 for(cruise in allcruises){
 
@@ -285,11 +282,18 @@ if(cruise == 'Thompson_9'){pre.influx <- read.csv(paste0(cruise,"data/merged_sum
                               influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")
                         }
 
+
+if(cruise == 'SCOPE_2'){influx <- read.csv(paste0(cruise,"data/abundance_table.csv"))
+                          influx$time <- as.POSIXct(influx$time, format="%m/%d/%y %H:%M", tz="HST")
+                          influx$pro <- influx[,"pro_infl"]
+                          influx$syn <- influx[,"syn_infl"]
+                          influx$pico <- influx[,"pico_infl"]
+                        }
+
 influx <- influx[order(influx$time), ]
 
-
 ### SFL
-if(cruise == "SCOPE_6" | cruise == "Thompson_9") inst <- 740
+if(cruise == "SCOPE_6" | cruise == "Thompson_9" | cruise == "SCOPE_2") inst <- 740
 if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
 if(cruise == "SCOPE_16") inst <- 751
 
@@ -302,7 +306,7 @@ if(cruise != 'MBARI_1'){
 ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))
 if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]
 if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]
-if(cruise == "Thompson_9") ALL$file <- sub(".gz","", ALL$file)
+if(cruise == "Thompson_9" | cruise == "SCOPE_2") ALL$file <- sub(".gz","", ALL$file)
 
   ALL$cruise <- cruise
   id2 <- match(ALL[,'file'],as.character(sfl[,"FILE"]))
@@ -315,7 +319,7 @@ if(cruise == "Thompson_9") ALL$file <- sub(".gz","", ALL$file)
 
   # add abundance from INFLUX
   id <- findInterval(ALL$time,influx$time)
-  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9") id <- id +1
+  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9"| cruise == "SCOPE_2") id <- id +1
   for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]
 
 
@@ -492,62 +496,40 @@ plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", yl
 ###################
 ### 6. PLOTTING ###
 ###################
+library(tidyverse)
 s <- best.vc.method
 
-png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=12, height=15, unit='in', res=500)
+df1 <- subset(DF, corr== best.offset)
 
-t <- 0.6
-par(mfrow=c(5,3), pty='m',cex=1.2, mar=c(2,3,2,1))
-  df1 <- subset(DF, corr==3 | corr==2 | corr==4)
+df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
+  df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
+  df2$cruise <- df2b$cruise
+df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
+  df3$cruise <- df2b$cruise
 
-  df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
-    df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
-    df2$cruise <- df2b$cruise
-  df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
-    df3$cruise <- df2b$cruise
-
-  for(c in unique(df2$cruise)){
-    df <- subset(df2, cruise == c)
-    df.sd <- subset(df3, cruise == c)
-
-    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=1, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")], na.rm=T)/2, max(df[,paste0("pro.influx")], na.rm=T)*1.5), las=1)
-    plotCI(df[,"time"], df[,paste0("pro.seaflow.each",s)], uiw=df.sd[,paste0("pro.seaflow.each",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
-    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=1, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")], na.rm=T)/2, max(df[,paste0("syn.influx")], na.rm=T)*2), las=1)
-    plotCI(df[,"time"], df[,paste0("syn.seaflow.each",s)], uiw=df.sd[,paste0("syn.seaflow.each",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
-    legend('top',legend=c("influx","SeaFlow"), pch=c(1,16),bty='n',cex=0.8)
-    if(c == "Thompson_9"){
-        plot(df[,"time"], rep(1, nrow(df)), pch=NA)
-        legend("center", "NA", bty='n')
-      }else{
-        plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=1, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")], na.rm=T)/2, max(df[,paste0("pico.influx")], na.rm=T)*2), las=1)
-        plotCI(df[,"time"], df[,paste0("pico.seaflow.median",s)], uiw=df.sd[,paste0("pico.seaflow.median",s)], sfrac=0, pch=21, scol=alpha(df$col.cruise,t), pt.bg=alpha(df$col.cruise,t),add=T)
-        }
-    print(c)
-    print(mean(df[,paste0("pro.seaflow.each",s)], na.rm=T)/mean(df[,paste0("pro.influx")], na.rm=T))
-    print(mean(df[,paste0("syn.seaflow.each",s)], na.rm=T)/mean(df[,paste0("syn.influx")], na.rm=T))
-    print(mean(df[,paste0("pico.seaflow.median",s)], na.rm=T)/mean(df[,paste0("pico.influx")], na.rm=T))
-  }
-
-dev.off()
+data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 3)),
+                  time=as.POSIXct(rep(df2$time,3)),
+                  population=rep(c("prochloro","synecho","picoeuks"), each=nrow(df2)),
+                  Influx=c(df2[,paste0("pro.influx")],df2[,paste0("syn.influx")], df2[,paste0("pico.influx")]),
+                  SeaFlow=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("syn.seaflow.each",s)], df2[,paste0("pico.seaflow.median",s)]))
 
 
+group.colors <- c(prochloro='skyblue3',synecho='orange',picoeuks='seagreen3')
 
-png(paste0("SeaFlowInflux-ALLcomparison.png"),width=12, height=15, unit='in', res=500)
 
-t <- 0.3
-par(mfrow=c(3,2), pty='s',cex=1.2)
-  plotCI(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)],df3[,paste0("pro.seaflow.each",s)], sfrac=0, xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370), las=1); abline(b=1, a=0, lty=2)
-    legend('topleft',legend=unique(df2$cruise),pt.bg=alpha(unique(df2$col.cruise),t), pch=21,bty='n',cex=0.8)
-      plotCI(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)],df3[,paste0("pro.seaflow.each",s)], sfrac=0, log='xy', xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Prochlorococcus",ylim=c(5,370),xlim=c(5,370), las=1); abline(b=1, a=0, lty=2)
-  plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.each",s)],df3[,paste0("syn.seaflow.each",s)], sfrac=0,xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)
-      plotCI(df2[,"syn.influx"], df2[,paste0("syn.seaflow.each",s)],df3[,paste0("syn.seaflow.each",s)], sfrac=0, log='xy', xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Synechococcus",xlim=c(0.5,150),ylim=c(0.5,150),las=1); abline(b=1, a=0, lty=2)
-  plotCI(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)],df3[,paste0("pico.seaflow.median",s)], sfrac=0,xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)
-      plotCI(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)],df3[,paste0("pico.seaflow.median",s)], sfrac=0,log='xy', xlab="Influx", ylab='SeaFlow',
-        pch=21, scol=df2$col.cruise, pt.bg=alpha(df2$col.cruise,t), main="Picoeukaryotes",xlim=c(0.2,50),ylim=c(0.2,50),las=1); abline(b=1, a=0, lty=2)
+levels(data$cruise) <- c("KN210-04", "CN11","KOK1606","KM1502","KM1513","TN271")
 
-dev.off()
+
+png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=18, height=12, unit='in', res=500)
+
+p <- data %>%
+      ggplot() + geom_point(aes(x=time, y=SeaFlow,fill=population), pch=21, alpha=0.35, size=6) +
+      geom_point(aes(x=time, y=Influx,fill=population), pch=21, size=2) +
+      facet_wrap( ~ cruise, scales='free_x') +
+      scale_y_continuous(trans= 'log10') +
+      scale_color_manual(values=group.colors) +
+      scale_fill_manual(values=group.colors) +
+      hide_legend(p) +
+      theme_bw()
+
+htmlwidgets::saveWidget(as_widget(ggplotly(hide_legend(p))), "SeaFlowInflux-CRUISEcomparison.html")
