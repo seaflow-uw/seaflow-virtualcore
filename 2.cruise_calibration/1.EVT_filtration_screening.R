@@ -510,8 +510,8 @@ df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
 data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 3)),
                   time=as.POSIXct(rep(df2$time,3)),
                   population=rep(c("prochloro","synecho","picoeuks"), each=nrow(df2)),
-                  Influx=c(df2[,paste0("pro.influx")],df2[,paste0("syn.influx")], df2[,paste0("pico.influx")]),
-                  SeaFlow=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("syn.seaflow.each",s)], df2[,paste0("pico.seaflow.median",s)]))
+                  ref=c(df2[,paste0("pro.influx")],df2[,paste0("syn.influx")], df2[,paste0("pico.influx")]),
+                  abundance=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("syn.seaflow.each",s)], df2[,paste0("pico.seaflow.median",s)]))
 
 
 group.colors <- c(prochloro='skyblue3',synecho='orange',picoeuks='seagreen3')
@@ -520,16 +520,16 @@ group.colors <- c(prochloro='skyblue3',synecho='orange',picoeuks='seagreen3')
 levels(data$cruise) <- c("KN210-04", "CN11","KOK1606","KM1502","KM1513","TN271")
 
 
-png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=18, height=12, unit='in', res=500)
-
 p <- data %>%
-      ggplot() + geom_point(aes(x=time, y=SeaFlow,fill=population), pch=21, alpha=0.35, size=6) +
-      geom_point(aes(x=time, y=Influx,fill=population), pch=21, size=2) +
+      ggplot() +
+      geom_point(aes(x=time, y=abundance,fill=population), pch=21, alpha=0.35, size=6) +
+      geom_point(aes(x=time, y=ref,fill=population), pch=21, size=2, show.legend=F) +
       facet_wrap( ~ cruise, scales='free_x') +
       scale_y_continuous(trans= 'log10') +
       scale_color_manual(values=group.colors) +
-      scale_fill_manual(values=group.colors) +
-      hide_legend(p) +
+      scale_fill_manual(values=group.colors, name="SeaFlow") +
+      labs(x="", y="Abundance (cells µL-1)") +
       theme_bw()
+p
 
-htmlwidgets::saveWidget(as_widget(ggplotly(hide_legend(p))), "SeaFlowInflux-CRUISEcomparison.html")
+ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=6, unit='in', dpi=500)
