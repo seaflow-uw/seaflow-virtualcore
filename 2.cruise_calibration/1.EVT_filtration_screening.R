@@ -497,6 +497,7 @@ plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", yl
 ### 6. PLOTTING ###
 ###################
 library(tidyverse)
+library(viridis)
 s <- best.vc.method
 
 df1 <- subset(DF, corr== best.offset)
@@ -509,12 +510,13 @@ df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
 
 data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 3)),
                   time=as.POSIXct(rep(df2$time,3)),
-                  population=rep(c("prochloro","synecho","picoeuks"), each=nrow(df2)),
+                  population=rep(c("prochloro","synecho","picoeuk"), each=nrow(df2)),
                   ref=c(df2[,paste0("pro.influx")],df2[,paste0("syn.influx")], df2[,paste0("pico.influx")]),
                   abundance=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("syn.seaflow.each",s)], df2[,paste0("pico.seaflow.median",s)]))
+#remove SeaFlow pico data for Thompson_9
+data[which(data$population == 'picoeuk' & data$cruise == 'Thompson_9'), 'abundance'] <- NA
 
-
-group.colors <- c(prochloro='skyblue3',synecho='orange',picoeuks='seagreen3')
+group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
 
 
 levels(data$cruise) <- c("KN210-04", "CN11","KOK1606","KM1502","KM1513","TN271")
@@ -522,7 +524,7 @@ levels(data$cruise) <- c("KN210-04", "CN11","KOK1606","KM1502","KM1513","TN271")
 
 p <- data %>%
       ggplot() +
-      geom_point(aes(x=time, y=abundance,fill=population), pch=21, alpha=0.35, size=6) +
+      geom_point(aes(x=time, y=abundance,fill=population), pch=21, alpha=0.5, size=6) +
       geom_point(aes(x=time, y=ref,fill=population), pch=21, size=2, show.legend=F) +
       facet_wrap( ~ cruise, scales='free_x') +
       scale_y_continuous(trans= 'log10') +
