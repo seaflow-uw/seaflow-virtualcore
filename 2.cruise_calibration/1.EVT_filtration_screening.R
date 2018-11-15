@@ -548,4 +548,4 @@ p <- data %>%
       theme_bw()
 p
 
-ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=6, unit='in', dpi=500)
+ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=500)
