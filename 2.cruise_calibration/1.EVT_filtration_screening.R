@@ -24,45 +24,42 @@ beads.coord <- read.csv("https://raw.githubusercontent.com/armbrustlab/seaflow-f
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
 
-gate <- F
-allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704")
+gate <- T
+allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704", "HOT")
 
 
 for(cruise in allcruises){
 
-  #cruise <- allcruises[7]
+  #cruise <- allcruises[8]
 
   print(cruise)
   ### Get EVT list
   if(cruise == "SCOPE_6" | cruise == "SCOPE_16" | cruise == "SCOPE_2") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)
   if(cruise == "DeepDOM"| cruise == "MBARI_1" | cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)
   if(cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt",full.names=T, recursive=T)
-  if(cruise == "SCOPE_2" | cruise == "MGL1704") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)
+  if(cruise == "SCOPE_2" | cruise == "MGL1704" | cruise == "HOT") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)
 
 
-  if(cruise == "SCOPE_6" | cruise == "Thompson_9" | cruise == "SCOPE_2") inst <- 740
-  if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
-  if(cruise == "SCOPE_16"| cruise == "MGL1704") inst <- 751
+  inst <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"instrument"])
 
   # SLOPES
   slopes <- read.csv("seaflow_filter_slopes.csv")
 
   # BEADS
-  beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.fsc.small"])
-  beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D1"])
-  beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D2"])
-
-  if(cruise == "MBARI_1"){
-      beads.fsc <- 50000
-      beads.d1 <- 32000
-      beads.d2 <- 35000
+  if(cruise != "HOT"){
+    beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.fsc.small"])
+    beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D1"])
+    beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D2"])
   }
-
 
 width <- 5000
 ALL <- NULL
 
+
 for (file in list){
+  # BEADS
+
+
 
   #file <- list[2]
   print(file)
@@ -86,7 +83,17 @@ for (file in list){
     # plot_cyt(df, "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)
     # plot_cyt(df, "fsc_small", "pe"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
 
-    screening <- c(0,2500,5000,7500,10000, 1, 2, 3, 4)
+    if(cruise == "HOT"){
+      c <- basename(dirname(dirname(file)))
+        beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == c & beads.coord$quantile == 50),"beads.fsc.small"])
+        beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == c & beads.coord$quantile == 50),"beads.D1"])
+        beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == c & beads.coord$quantile == 50),"beads.D2"])
+        inst <- as.numeric(beads.coord[which(beads.coord$cruise == c & beads.coord$quantile == 50),"instrument"])
+
+      }
+
+
+    screening <- c(0)#,2500,5000,7500,10000, 1, 2, 3, 4)
 
   for(corr in screening){
 
