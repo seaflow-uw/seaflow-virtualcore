@@ -24,7 +24,7 @@ beads.coord <- read.csv("https://raw.githubusercontent.com/armbrustlab/seaflow-f
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
 
-gate <- T
+gate <- F
 allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704", "HOT")
 
 
@@ -93,7 +93,7 @@ for (file in list){
       }
 
 
-    screening <- c(0)#,2500,5000,7500,10000, 1, 2, 3, 4)
+    screening <- c(0,2500,5000,7500,10000, 1, 2, 3, 4)
 
   for(corr in screening){
 
@@ -240,8 +240,8 @@ library(popcycle)
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
-allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704")
-cruise <- allcruises[7]
+allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704", "HOT")
+cruise <- allcruises[8]
 
 DF <- NULL
 for(cruise in allcruises){
@@ -264,6 +264,8 @@ if(cruise == 'SCOPE_16'){influx <- read.csv(paste0(cruise,"data/all_station_cura
                               }
 if(cruise == 'MBARI_1'){  sfl <- read.delim(paste0(cruise,"data/cruise.sfl"))
                           sfl$date <- as.POSIXct(sfl$DATE, format = "%FT%T", tz = "GMT")
+                          inst <- 989
+                          sfl$flow_rate2 <- flowrate(sfl$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
                           influx <- read.csv(paste0(cruise,"data/mbari_summary.csv"))
                           id <- match(influx[,'file'],sfl[,"FILE"])
                           influx$time <- sfl[id, 'date']
@@ -309,23 +311,45 @@ if(cruise == 'MGL1704'){influx <- read.csv(paste0(cruise,"data/all_station_curat
                                         }
 
 
+
+
+if(cruise == 'HOT'){influx <- read.csv(paste0(cruise,"data/HOT_influx_SeaFlow_results.csv"))
+                          influx$time <- as.POSIXct(influx$HOT_datetime, format="%m/%d/%y %H:%M", tz="GMT")
+                          influx <- data.frame(cbind(time=influx$time, pro=influx$HOT_abund_pro, syn=influx$HOT_abund_syn, pico=influx$HOT_abund_peuk))
+                          influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")
+                                        }
+
 influx <- influx[order(influx$time), ]
 
 ### SFL
-if(cruise == "SCOPE_6" | cruise == "Thompson_9" | cruise == "SCOPE_2") inst <- 740
-if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989
-if(cruise == "SCOPE_16"| cruise == "MGL1704") inst <- 751
 
-if(cruise != 'MBARI_1'){
+if(cruise != 'MBARI_1' & cruise !="HOT"){
+      inst <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"instrument"])
       sfl <- read.delim(paste0("https://raw.githubusercontent.com/armbrustlab/seaflow-sfl/master/curated/", cruise,"_",inst, ".sfl"))
       sfl$date <- as.POSIXct(sfl$DATE, format="%FT%T", tz='GMT')
+      sfl$flow_rate2 <- flowrate(sfl$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
       }
+      sfl$date <- as.POSIXct(sfl$DATE, format="%FT%T", tz='GMT')
+
+if(cruise == "HOT"){
+            list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)
+              c <- basename(dirname(dirname(list)))
+              sfl <- NULL
+                for(i in c){
+                  inst <- as.numeric(beads.coord[which(beads.coord$cruise == i & beads.coord$quantile == 50),"instrument"])
+                  s <- read.delim(paste0("https://raw.githubusercontent.com/armbrustlab/seaflow-sfl/master/curated/", i,"_",inst, ".sfl"))
+                  s$date <- as.POSIXct(s$DATE, format="%FT%T", tz='GMT')
+                  s$flow_rate2 <- flowrate(s$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
+                  sfl <- rbind(sfl, s)
+                  }
+            }
+
 
 ### SEAFLOW DATA
 ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))
 if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]
 if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]
-if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704') ALL$file <- sub(".gz","", ALL$file)
+if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704' | cruise == "HOT") ALL$file <- sub(".gz","", ALL$file)
 
   ALL$cruise <- cruise
   id2 <- match(ALL[,'file'],as.character(sfl[,"FILE"]))
@@ -333,12 +357,11 @@ if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704') ALL$file 
   ALL$time <- sfl[id2, 'date'] # add time
     ALL <- ALL[order(ALL$time), ]
 
-  sfl$flow_rate2 <- flowrate(sfl$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
   ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate
 
   # add abundance from INFLUX
   id <- findInterval(ALL$time,influx$time)
-  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9"| cruise == "SCOPE_2") id <- id +1
+  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9"| cruise == "SCOPE_2" | cruise == "HOT") id <- id +1
   for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]
 
 
@@ -396,7 +419,6 @@ if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704') ALL$file 
 
 
     DF <- rbind(DF,ALL)
-
   }
 
 
@@ -542,7 +564,7 @@ data[which(data$population == 'picoeuk' & data$cruise == 'Thompson_9'), 'abundan
 group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
 
 
-levels(data$cruise) <- c("KN210-04", "CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
+levels(data$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
 
 
 p <- data %>%
