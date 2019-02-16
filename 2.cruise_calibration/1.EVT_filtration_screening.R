@@ -449,7 +449,7 @@ for(cruise in unique(DF$cruise)){
     t <- 0.6
     s <- 2
    df <- subset(DF, corr==2)
-   par(mfrow=c(3,2), pty='s',cex=1.2)
+   par(mfrow=c(3,2), pty='s',cex=1)
    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t), las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
@@ -578,3 +578,32 @@ p <- data %>%
 p
 
 ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=500)
+
+
+
+
+
+s <- subset(data, instrument == "SeaFlow")$abundance
+i <- subset(data, instrument == "Influx")$abundance
+population <- subset(data, instrument == "Influx")$population
+
+par(mfrow=c(1,2),pty='s')
+plot(s, i);abline(0,1)
+plot(s, i, log='xy');abline(0,1)
+
+print(length(s))
+
+
+
+
+df <- data.frame(cbind(s,i))
+
+p2 <- df %>%
+    ggplot() +
+    geom_point(aes(x=s, y=i), pch=21, alpha=0.5, show.legend=T) +
+    scale_y_continuous(trans= 'log10') +
+    scale_x_continuous(trans= 'log10') +
+    scale_fill_manual(values=group.colors) +
+    labs(x="SeaFlow Abundance (cells µL-1)", y="Influx Abundance (cells µL-1)") +
+    theme_bw()
+p2
