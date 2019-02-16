@@ -573,7 +573,7 @@ p <- data %>%
       facet_wrap( ~ cruise, scales='free_x') +
       scale_y_continuous(trans= 'log10') +
       scale_fill_manual(values=group.colors) +
-      labs(x="", y="Abundance (cells µL-1)") +
+      labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
       theme_bw()
 p
 
@@ -586,24 +586,21 @@ ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=
 s <- subset(data, instrument == "SeaFlow")$abundance
 i <- subset(data, instrument == "Influx")$abundance
 population <- subset(data, instrument == "Influx")$population
+df <- tibble(s,i, population)
 
-par(mfrow=c(1,2),pty='s')
-plot(s, i);abline(0,1)
-plot(s, i, log='xy');abline(0,1)
-
-print(length(s))
-
-
-
-
-df <- data.frame(cbind(s,i))
+r <- round(cor(i,s,use='pairwise.complete.obs',  method= 'pearson'),2)
 
 p2 <- df %>%
-    ggplot() +
-    geom_point(aes(x=s, y=i), pch=21, alpha=0.5, show.legend=T) +
+    ggplot(aes(x=s, y=i)) +
+    geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=3) +
+    geom_abline(intercept=0, coeff=1, col=1, lwd=0.5, lty=2) +
+    geom_smooth(method='glm',col='red3',lwd=0.5) +
     scale_y_continuous(trans= 'log10') +
     scale_x_continuous(trans= 'log10') +
     scale_fill_manual(values=group.colors) +
-    labs(x="SeaFlow Abundance (cells µL-1)", y="Influx Abundance (cells µL-1)") +
+    labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
+    annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
+    annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
     theme_bw()
 p2
+ggsave("SeaFlowInflux-correlation.png", width=7, height=6, unit='in', dpi=600)
