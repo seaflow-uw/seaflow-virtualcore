@@ -1,1508 +1,1827 @@
-head(df.mean)
-head(df.mean,50)
-nrow(df)
-nrow(df.mean)
-para <- colnames(stat)[-c(2,13,21,23,25,27,29)]
-df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df.mean)
-df.mean$file <- stat[findInterval(df.mean$time, stat$time),"file"]
-findInterval(df.mean$time, stat$time)
-para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)
-head(df)
-match(df.mean$time, stat$time)
-df.mean$file <- stat[match(df.mean$time, stat$time),"file"]
-head(df.mean)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
+plot_cruisetrack(sfl, "ocean_tmp", bin=5)
+bin = 5
+sfl <- sfl %>%#
+        group_by(date= cut(date, breaks=paste(bin, "hour"))) %>%#
+        summarise_all(mean)
+sfl %>%#
+        group_by(date= cut(date, breaks=paste(bin, "hour")))
+paste(bin, "hour")
+sfl %>%#
+        group_by(date= cut(date, breaks="5 hour"))
+tibble(sfl)
+sfl <- get.sfl.table(db)
+tibble(sfl)
+head(sfl)
+?tibble
+sfl$date <- as.POSXIct(sfl$date, format="%FT%T", tz='GMT')
+sfl$date <- as.POSIXct(sfl$date, format="%FT%T", tz='GMT')
+sfl$date
+plot_cruisetrack <- function(sfl, param, bin=NULL){#
 #
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
+  sfl$date <- as.POSIXct(sfl$date, format="%FT%T", tz='GMT')#
+  geo <- list(#
+    showland = TRUE,#
+    showlakes = TRUE,#
+    showcountries = TRUE,#
+    showocean = TRUE,#
+    countrywidth = 0.5,#
+    landcolor = plotly::toRGB("grey90"),#
+    lakecolor = plotly::toRGB("white"),#
+    oceancolor = plotly::toRGB("white"),#
+    projection = list(#
+      type = 'orthographic',#
+      rotation = list(#
+        lon = -100,#
+        lat = 40,#
+        roll = 0#
+      )#
+    ),#
+    lonaxis = list(#
+      showgrid = TRUE,#
+      gridcolor = plotly::toRGB("gray40"),#
+      gridwidth = 0.5#
+    ),#
+    lataxis = list(#
+      showgrid = TRUE,#
+      gridcolor = plotly::toRGB("gray40"),#
+      gridwidth = 0.5#
+    )#
+  )#
 #
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd[,-c(1,2)])
-head(DF)
-para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".se")#
-      DF <- cbind(df.mean,df.sd)
-head(DF)
-tail(DF)
-DF <- DF[order(DF$time),]
-head(DF)
-df.sd <- df.sd/sqrt(6) # Calculate SE from SD
-head(df.sd)
-sqrt(6)
-head(DF)
-#' Find EVT files with a recursive search down a directory tree.#
-#'#
-#' @param evt.dir Directory containing EVT files.#
-#' @return Vector of EVT files with julian day directory.#
-#' @examples#
-#' \dontrun{#
-#' evt.files <- get.evt.files(evt.dir)#
-#' }#
-#' @export#
-get.evt.files <- function(evt.dir) {#
-  file.list <- list.files(evt.dir, recursive=T)#
-  if (length(file.list) == 0) {#
-    print(paste("no evt files found in", evt.dir))#
-    return(file.list)#
-  }#
-  # regexp to match both types of EVT files#
-  #   - 37.evt (old style)#
-  #   - 2014-05-15T17-07-08+0000 or 2014-07-04T00-03-02+00-00 (new style)#
-  # In the new style the final timezone offset may not always be UTC (00-00)#
-  # so be sure to correctly parse it in all code.#
-  regexp <- "/?[0-9]+\\.evt(\\.gz)?$|/?[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}[+-][0-9]{2}-?[0-9]{2}(\\.gz)?$"#
-  id <- grep(regexp,file.list)#
-  file.list <- file.list[id]#
-  #print(paste(length(file.list), "evt files found"))#
-  return(sort(unlist(lapply(file.list, clean.file.path))))#
-}#
+  if(!is.null(bin)) {#
+    sfl <- sfl %>%#
+        group_by(date= cut(date, breaks=paste(bin, "hour"))) %>%#
+        summarise_all(mean)#
 #
-#' Find the most recent EVT file.#
-#'#
-#' @param evt.dir Directory containing EVT files.#
-#' @return Most recent EVT file with julian day directory.#
-#' @examples#
-#' \dontrun{#
-#' evt.file <- get.latest.evt(evt.dir)#
-#' }#
-#' @export#
-get.latest.evt <- function(evt.dir) {#
-  file.list <- get.evt.files(evt.dir)#
-  n <- length(file.list)#
-  return(clean.file.path(file.list[n]))#
-}#
-#
-#' file.transfer#
-#'#
-#' @return None#
-#' @export#
-file.transfer <- function(evt.dir, instrument.dir){#
-#
-  last.evt <- get.latest.evt(evt.dir)#
-  file.list <- list.files(instrument.dir, recursive=T)#
-  sfl.list <- file.list[grepl('.sfl', file.list)]#
-  file.list <- file.list[-length(file.list)] # remove the last file (opened file)#
-  file.list <- sort(file.list[!grepl('.sfl', file.list)])#
-#
-  id <- match(last.evt, file.list)#
-#
-  if(length(id) == 0){#
-    day <- unique(dirname(file.list))#
-      for(d in day) system(paste0("mkdir ",evt.dir,"/",d))#
-    print(paste0("scp ",instrument.dir,"/",file.list," ", evt.dir,"/",file.list))#
-    system(paste0("scp ",instrument.dir,"/",file.list," ", evt.dir,"/",file.list, collapse=";"))#
-    system(paste0("scp ",instrument.dir,"/",sfl.list," ", evt.dir,"/",sfl.list, collapse=";"))#
-  }#
-  else{#
-    file.list <- file.list[id:length(file.list)]#
-    day <- unique(dirname(file.list))#
-      for(d in day) system(paste0("mkdir ",evt.dir,"/",d))#
-    print(paste0("scp ",instrument.dir,"/",file.list," ", evt.dir,"/",file.list))#
-    system(paste0("scp ",instrument.dir,"/",file.list," ", evt.dir,"/",file.list, collapse=";"))#
-    system(paste0("scp ",instrument.dir,"/",sfl.list," ", evt.dir,"/",sfl.list, collapse=";"))#
-  }#
- }#
-#
-#' Clean a file path.#
-#'#
-#' Convert an EVT/OPP/VCT file path to a form suitable for storage in the SQLite#
-#' db. Any ".gz", ".opp", ".vct" extensions will be removed.#
-#'#
-#' @param fpath File path to clean.#
-#' @return Modified file path as julian_day/EVT_file_name.#
-#' @examples#
-#' \dontrun{#
-#' fpath <- clean.file.path("foo/2014_185/2014-07-04T00-00-02+00-00.opp.gz")#
-#' }#
-#' @export#
-clean.file.path <- function(fpath) {#
-  # Clean up any places with multiple "/"s#
-  fpath <- gsub("/+", "/", fpath)#
-#
-  # Check for julian day directory#
-  parts <- unlist(strsplit(fpath, "/"))#
-  if (length(parts) < 2) {#
-    stop(paste0("file path ", fpath, " must contain a julian day directory"))#
   }#
 #
-  file.name <- parts[length(parts)]#
-  julian.day <- parts[length(parts)-1]#
+  p <- plotly::plot_geo(sfl, lat = ~lat, lon = ~lon, color = sfl[,param], colors = viridis::viridis_pal(option = "D")(100), alpha=0.5) %>%#
+        plotly::colorbar(title = paste(param)) %>%#
+        plotly::layout(showlegend=T, geo = geo)#
 #
-  julian.regexp <- "^[0-9]{4}_[0-9]+$"#
-  if (length(grep(julian.regexp, julian.day)) != 1) {#
-    stop(paste0("Julian day directory does not match pattern YYYY_day in ", fpath))#
+    return(p)#
+#
+}
+plot_cruisetrack(sfl, "ocean_tmp", bin=5)
+plot_cruisetrack(sfl, "ocean_tmp", bin=NULL)
+sfl <- sfl %>%#
+        group_by(date= cut(date, breaks=paste(bin, "hour"))) %>%#
+        summarise_all(mean)
+sfl
+sfl <- data.frame(sfl)
+head(sfl)
+plot_cruisetrack <- function(sfl, param, bin=NULL){#
+#
+  sfl$date <- as.POSIXct(sfl$date, format="%FT%T", tz='GMT')#
+  geo <- list(#
+    showland = TRUE,#
+    showlakes = TRUE,#
+    showcountries = TRUE,#
+    showocean = TRUE,#
+    countrywidth = 0.5,#
+    landcolor = plotly::toRGB("grey90"),#
+    lakecolor = plotly::toRGB("white"),#
+    oceancolor = plotly::toRGB("white"),#
+    projection = list(#
+      type = 'orthographic',#
+      rotation = list(#
+        lon = -100,#
+        lat = 40,#
+        roll = 0#
+      )#
+    ),#
+    lonaxis = list(#
+      showgrid = TRUE,#
+      gridcolor = plotly::toRGB("gray40"),#
+      gridwidth = 0.5#
+    ),#
+    lataxis = list(#
+      showgrid = TRUE,#
+      gridcolor = plotly::toRGB("gray40"),#
+      gridwidth = 0.5#
+    )#
+  )#
+#
+  if(!is.null(bin)) {#
+    sfl <- sfl %>%#
+        group_by(date= cut(date, breaks=paste(bin, "hour"))) %>%#
+        summarise_all(mean)#
+    sfl <- data.frame(sfl)#
   }#
 #
-  # Get rid of any .gz extension#
-  if (nchar(file.name) >= 3) {#
-    if (substr(file.name, nchar(file.name) - 2, nchar(file.name)) == ".gz") {#
-      file.name <- substr(file.name, 1, nchar(file.name) - 3)#
-    }#
-  }#
+  p <- plotly::plot_geo(sfl, lat = ~lat, lon = ~lon, color = sfl[,param], colors = viridis::viridis_pal(option = "D")(100), alpha=0.5) %>%#
+        plotly::colorbar(title = paste(param)) %>%#
+        plotly::layout(showlegend=T, geo = geo)#
 #
-  # Get rid of any .opp extension#
-  if (nchar(file.name) >= 4) {#
-    if (substr(file.name, nchar(file.name) - 3, nchar(file.name)) == ".opp") {#
-      file.name <- substr(file.name, 1, nchar(file.name) - 4)#
-    }#
-  }#
+    return(p)#
 #
-  # Get rid of any .vct extension#
-  if (nchar(file.name) >= 4) {#
-    if (substr(file.name, nchar(file.name) - 3, nchar(file.name)) == ".vct") {#
-      file.name <- substr(file.name, 1, nchar(file.name) - 4)#
-    }#
-  }#
+}
+plot_cruisetrack(sfl, "ocean_tmp", bin=NULL)
+plot_cruisetrack(sfl, "ocean_tmp", bin=5)
+sfl <- get.sfl.table(db)
+plot_cruisetrack(sfl, "ocean_tmp", bin=NULL)
+plot_cruisetrack(sfl, "ocean_tmp", bin=5)
+plot_cruisetrack(sfl, "ocean_tmp", bin=1)
+plot_cruisetrack(sfl, "ocean_tmp", bin=0.5)
+plot_map(stat, param="abundance" , transform=T)
+cruise <- "SCOPE_6"#
+path <- "/Volumes/SeaFlow-OPP/seaflow-refilter-2018-11-20/"#
+opp.dir <- paste0(path, cruise[i], "/", cruise[i], "_opp")#
+vct.dir <- paste0(path,cruise[i],"/",cruise[i],"_vct")#
+db <- paste0(path, cruise[i], "/", cruise[i], ".db")#
 #
-  return(paste(julian.day, file.name, sep="/"))#
-}#
+outliers.list <- get.outlier.table(db)#
 #
-#' Check if file path ends with suffix#
-#'#
-#' @param path File path to test.#
-#' @param ending String suffix to test#
-#' @return TRUE or FALSE if path ends with ending. If either path or ending has#
-#'   length zero or if ending is longer than path, return FALSE.#
-#' @examples#
-#' \dontrun{#
-#' endswith("foo/bar.txt", ".txt") # TRUE#
-#' endswith("foo/bar.txt", ".gz")  # FALSE#
-#' }#
-endswith <- function(path, ending) {#
-  psize <- nchar(path)#
-  esize <- nchar(ending)#
-  if (psize > 0 && esize > 0 && psize >= esize) {#
-    return(substr(path, psize - esize + 1, psize) == ending)#
-  }#
-  return(FALSE)#
-}#
-#' Extract dawn and dusk times from a time series of PAR values#
-#'#
-#' Extracts the time that dawn and dusk occur from a time series consisting of PAR values (light intensity).#
-#' Dawn is defined as the point where the par value goes from night -> day.#
-#' Dusk is defined as the point where the par value goes from day -> night.#
-#' This is useful for gating purposes for flow- cytometry.#
-#' Dawn and dusk tend to represent the extrema of flourences for phytoplankton.#
-#' @param x A data frame with two columns. The first column must be time values#
-#'    in as.POSIXct format. The second column must be PAR values.#
-#' @param cutoff An integer representing the smallest par value that is considered#
-#'  daytime.#
-#' @return A vector consisting of dawn and dusk time values in as.POSIXct format#
-#' @examples#
-#' \dontrun{#
-#' par.data.csv <- system.file("extdata/par_data.csv", package="popcycle")#
-#' par.data <- read.csv(par.data.csv)#
-#' par.data$date <- as.POSIXct(par.data$date, format = "%FT%T", tz = "GMT")#
-#' dawn.dusk.times <- get.dawn.dusk.time(par.data, 10)#
-#' }#
-#' @export#
-get.dawn.dusk.time <- function(x, cutoff) {#
-    # assign names to the time and par parameters#
-    time <- x[,1]#
-    par <- x[,2]#
+head(outliers.list)#note third file, 2015_206/2015-07-25T00-25-45+00-00,  with flag = 3
+opp.list <- get.opp.files(db,outliers=TRUE)#
 #
-    # We will define dawn and dusk times to occur when par goes from above 10 -> below 10,#
-    # or from below 10 -> above 10#
-    above <- par > cutoff#
-    intersect <- which(diff(above)!=0)#
-#
-    # We will then make sure we are only getting points that fall within the sequential pattern#
-    # of natural dusk and dawns, AKA they must be separated by same time intervals#
-#
-    #revision <- intersect[which(diff(intersect) > mean(diff(intersect)))]#
-    #dawn.dusk <- time[revision]#
-#
-    dawn.dusk <- time[intersect]#
-    return(dawn.dusk)#
-}#
-#' Concatenate EVT or OPP files#
-#'#
-#' @param evtopp.list List of EVT or OPP files (full path required).#
-#' @param n Number of rows to return.#
-#' @param min.fsc, min.pe, min.chl Minimum value for fsc_small, pe and chl_small respectively#
-#' @return A dataframe with n rows.#
-#' @export#
-concatenate.evtopp <- function(evtopp.list, n=100000, min.fsc=0, min.pe=0, min.chl=0, transform=TRUE,...){#
-  n <- as.numeric(n)#
-  DF <- NULL#
-  i <- 0#
-  for (file in evtopp.list){#
-        message(round(100*i/length(evtopp.list)), "% completed \r", appendLF=FALSE)#
-#
-        tryCatch({#
-          df <- readSeaflow(file,transform=transform,...)#
-          df <- subset(df, fsc_small > min.fsc & pe > min.pe & chl_small > min.chl)#
-          df <- df[round(seq(1,nrow(df), length.out=round(n/length(evtopp.list)))),]#
-#
-            if(any(is.na(df))) next#
-            DF <- rbind(DF, df)#
-            }, error = function(e) {#
-              cat(paste0("Error with file ", file, ": ", e))#
-          })#
-#
-          i <- i + 1#
-          flush.console()#
+head(opp.list)# th
+meta <- googlesheets::gs_read(googlesheets::gs_title("SeaFlow\ instrument\ log", verbose = FALSE))#
+    official.cruise <- paste(meta[which(meta$cruise == cruise),'Cruise ID'])
+paste0(path,cruise, "/",official.cruise,".xlsx")
+xls_convert(db, meta, paste0(path,cruise, "/",official.cruise,".xlsx"))
+paste0(path,cruise, "/",official.cruise,".xlsx")
+xls_convert(db, meta, paste0(path,cruise, "/",official.cruise,".xlsx"))
+cruise <- "KM1712"#
+    path <- "/Volumes/OPPdata/SeaFlow-OPP/seaflow-refilter-2018-11-20/" # NEW#
+    #path <- "/Volumes/OPPdata/SeaFlow-OPP/seaflow-refilter-2018-10-01/" # OLD#
+    db <- paste0(path,cruise, "/",cruise,".db")
+meta <- googlesheets::gs_read(googlesheets::gs_title("SeaFlow\ instrument\ log", verbose = FALSE))#
+    official.cruise <- paste(meta[which(meta$cruise == cruise),'Cruise ID'])
+official.cruise
+xls_convert(db, meta, paste0(path,cruise, "/",official.cruise,".xlsx"))
+paste0(path,cruise, "/",official.cruise,".xlsx")
+library(tidyverse)
+ctd <- read_csv("~/Documents/DATA/SeaFlow/SF_GRADIENTS/all_uCTD.csv")
+ctd
+ggplot(ctd, aes(lat, salinity)) + geom_line(group=cruise)
+ggplot(ctd, aes(lat, salinity)) + geom_line(x=lat, y=salinity, group=cruise)
+ggplot(ctd, aes(lat, salinity)) + geom_line(aes(lat, salinity), group=cruise)
+?geom_line
+ggplot(ctd, aes(lat, salinity)) + geom_line(group=cruise)
+ggplot(ctd, aes(lat, salinity)) + geom_line(group=ctd$cruise)
+ggplot(ctd, aes(lat, salinity)) + geom_line(group=ctd$cruise, color=ctd$cruise)
+ggplot(ctd, aes(lat, salinity)) + geom_line(group=ctd$cruise, color=c(1,2))
+ggplot(ctd, aes(lat, salinity)) + geom_line(aes(group=cruise))
+ggplot(ctd, aes(lat, salinity)) + geom_line(aes(group=factor(cruise)))
+ggplot(ctd, aes(lat, salinity)) + geom_points(aes(group=factor(cruise)))
+ggplot(ctd, aes(lat, salinity)) + geom_point(aes(group=factor(cruise)))
+ggplot(ctd, aes(lat, salinity)) + geom_point(aes(group=factor(cruise), color=factor(cruise)))
+unique(ctd$lat)
+ctd1 <- subset(ctd, cruise == 'gradients1.0')
+unique(ctd1$lat)
+ctd2 <- subset(ctd, cruise == 'gradients2.0')
+unique(ctd2$lat)
+library(flowCore)#
+library(splancs)#
+library(plotrix)#
+library(caroline)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+plot.cytogram <- function (evtopp, para.x = "FSC.small.stuff", para.y = "X692.40.small.stuff", ...)#
+{#
+    cols <- colorRampPalette(c("blue4", "royalblue4", "deepskyblue3",#
+        "seagreen3", "yellow", "orangered2", "darkred"))#
+    par(pty = "s")#
+    plot(evtopp[, c(para.x, para.y)], pch = 16, cex = 0.3,col = densCols(log10(evtopp[, c(para.x, para.y)]),#
+          colramp = cols), xlim = c(1, 10^4), ylim = c(1, 10^4), log='xy',...)#
           }#
 #
-      return(DF)#
-}#
-#' Calculation of flow rate based on stream pressure measured by SeaFlow#
-#'#
-#' @param dataframe that contains stream pressure measured by SeaFlow (available in SFL table and STAT table). Note that the dataframe needs to have a column named 'stream_pressure'#
-#' @param inst Instrument serial. If not provided this will attempt to be#
-#'   parsed from the SFL file name (<cruise>_<serial>.sfl).#
-#' @return A dataframe with flow rate estimates#
-#' @export#
-#
-flowrate <- function(stat, inst=NULL){#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))#
-    fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')#
-#
-    stat$flow_rate <- 10^fr[,"fit"] # mL min-1#
-    stat$flow_rate.se <- stat$flow_rate * abs((fr[,"upr"]-fr[,"lwr"])/(2 * 1.96 * fr[,"fit"]))#
-#
-  return(stat)#
-#
-}#
-#' Get aggregate statistics data frame along with estimates of cell abundance.#
-#'#
-#' @param db SQLite3 database file path.#
-#' @param inst Instrument serial. If not provided this will attempt to be#
-#'   parsed from the SFL file name (<cruise>_<serial>.sfl).#
-#' @return Data frame of aggregate statistics.#
-#' @examples#
-#' \dontrun{#
-#' stats <- get.stat.table(db, inst=NULL)#
-#' }#
-#' @export#
-get.stat.table <- function(db, inst=NULL) {#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  # ratio of the volume of the stream analyzed by the laser (aka, detectable region) to the whole water stream (200 µm nozzle) for that instrument#
-    if(inst == "740") VC <- 0.136#
-    if(inst == "751") VC <- 0.143#
-    if(inst == "989") VC <- 0.149#
-#
-  DF <- get.raw.stat.table(db)#
-  stat <- flowrate(DF, inst=inst)#
-  stat[,c("abundance")]  <- stat[,"n_count"] / (1000*VC * stat[,"opp_evt_ratio"] * stat[,c("flow_rate")] * stat[,"file_duration"]/60)   # cells µL-1#
-  stat[,c("abundance.se")]  <- stat[,c("abundance")] * stat[,c("flow_rate.se")] / stat[,c("flow_rate")]           # cells µL-1#
-#
-  return(stat)#
-#
-}#
-#
-#' Normalization by beads used as internal standard#
-#'#
-#' @param stat Stat table generated by the function get.stat.table().#
-#' @param spar smooothing parameter, the higher the more smoothing is applied.#
-#' @return A dataframe with normalized D1, D2, fsc_small, chl_small, pe and fsc_perp values#
-#' @export#
-normalization <- function(stat, spar=0.7){#
-#
-  #check that there is beads in the table#
-  if(!any(unique(stat$pop) == 'beads')){#
-    print("no beads found, normalization can't be done")#
-    stop#
-  }#
-#
-  time <- as.POSIXct(stat$time, format = "%FT%T", tz = "GMT")#
-  beads <- subset(stat, pop =='beads' & quantile== 50)#
-    beads$time <- as.POSIXct(beads$time, format = "%FT%T", tz = "GMT")#
-#
-    channels <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp")#
-#
-  par(mfrow=c(3,2),cex=1.2, mar=c(2,5,1,1), oma=c(1,1,1,1))#
-#
-    for(para in channels){#
-          smooth <- smooth.spline(beads$time, beads[,para],spar=spar)#
-          smooth.beads <- spline(smooth$x, smooth$y, xout=unique(time))#
-          plot(beads$time, beads[,para], ylim=c(1, 10^3.5), log='y', xlab=NA, ylab=paste(para))#
-            lines(smooth.beads, col=2, lwd=3)#
-          id <- findInterval(time,beads$time)#
-          stat[,para] <- stat[,para] / smooth.beads$y[id]#
-          }#
-#
-  return(stat)#
-#
-}#
-#' Estimate Carbon cell quotas and biomass based on normalized foward scatter to 1-µm beads used as internal standard#
-#'#
-#' @param stat Table generated by the function normalization().#
-#' @param inst Instrument serial. If not provided this will attempt to be#
-#'   parsed from the SFL file name (<cruise>_<serial>.sfl).#
-#' @return A dataframe with carbon cell quotas and biomass#
-#' @export#
-carbon_conversion <- function(stat, inst=NULL){#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("cbiomass", paste0("lm_",inst),package='popcycle'))#
-  qc <- predict(reg, newdata=data.frame(norm.fsc=log10(stat$fsc_small)),interval='predict')#
-#
-  stat[,"Qc"] <- 10^qc[,"fit"] * 1000        # fgC cell-1#
-  stat[,"Qc.se"] <-   stat[,"Qc"] * abs((qc[,"upr"]-qc[,"lwr"])/(2*1.96 * qc[,"fit"]))   # fgC cell-1#
-  stat[,"Cbiomass"] <- stat[,"Qc"] * stat[,"abundance"] / 1000      # pgC L-1#
-  stat[,"Cbiomass.se"] <- stat[,"Cbiomass"] * (stat[,"abundance.se"] / stat[,"abundance"] + stat[,"Qc.se"] / stat[,"Qc"]) # pgC L-1#
-#
-  return(stat)#
-#
-}#
-#
-#' Calculate mean  + sd of aggregate statistics data from the 3 OPP data sets (2.5, 50 and 97.5 qunatile).#
-#'#
-#' @param stat. Table generated by the function carbon_conversion.#
-#' @return Data frame of aggregate statistics.#
-#' @examples#
-#' \dontrun{#
-#' DF <- merge.stat(stat)#
-#' }#
-#' @export#
-#
-merge.stat <- function(stat){#
-#
-    para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      df.se <- df.sd/sqrt(6) # Calculate SE from SD#
-      colnames(df.se) <- paste0(para,".se")#
-#
-      DF <- cbind(df.mean,df.se)#
-      DF <- DF[order(DF$time),]#
-#
-      return(DF)#
-}#
-#' Get aggregate statistics data frame along with propagation of errors#
-#'#
-#' @param db SQLite3 database file path.#
-#' @param inst Instrument serial. If not provided this will attempt to be#
-#'   parsed from the SFL file name (<cruise>_<serial>.sfl).#
-#' @param spar smooothing parameter, the higher the more smoothing is applied.#
-#' @param Whether the list of files flagged as outliers should be merged to the dataframe of aggregate statistics#
-#' @return Data frame of aggregate statistics.#
-#' @examples#
-#' \dontrun{#
-#' stat <- get.clean.stat.table(db, inst=NULL, spar=0.7, flag=F)#
-#' }#
-#' @export#
-get.clean.stat.table <- function(db, inst=NULL, spar=0.7, flag=T){#
-#
-  DF <- get.raw.stat.table(db)#
-  stat <- flowrate(DF, inst=inst)#
-  stat <- normalization(stat, spar=spar)#
-  stat <- carbon_conversion(stat, inst=inst)#
-  stat <- merge.stat(stat)#
-#
-  if(flag){#
-    outlier <- get.outlier.table(db)#
-    if(nrow(outlier) > 0){#
-      stat <- merge(stat, outlier, all.x=TRUE)#
-    }else print("No flagged file found!")#
-  }#
-#
-  return(stat)#
-#
-}
-df <- get.clean.stat.table(db, spar=0.5, flag=F)
-get.clean.stat.table <- function(db, inst=NULL, spar=0.7, flag=T){#
-#
-  DF <- get.raw.stat.table(db); print("1. getting raw data")#
-  stat <- flowrate(DF, inst=inst); print("2. adding flow rate")#
-  stat <- normalization(stat, spar=spar); print("3. normalization of channels by 1 µm based")#
-  stat <- carbon_conversion(stat, inst=inst); print("4.converting normalized light scattering to carbon")#
-  stat <- merge.stat(stat); print("5. Propagating error")#
-#
-  if(flag){#
-    outlier <- get.outlier.table(db)#
-    if(nrow(outlier) > 0){#
-      stat <- merge(stat, outlier, all.x=TRUE)#
-    }else print("No flagged file found!")#
-  }#
-#
-  return(stat)
-}
-df <- get.clean.stat.table(db, spar=0.5, flag=F)
-DF <- get.raw.stat.table(db); print("1. Getting raw data")#
-  stat <- flowrate(DF, inst=inst); print("2. Adding flow rate")
-stat <- get.stat.table(db, inst=inst); print("1. Getting raw data")#
-  stat <- normalization(stat, spar=spar); print("2. Normalizing channel values to 1 µm based")
-stat <- carbon_conversion(stat, inst=inst); print("3. Converting normalized light scattering to carbon")
-stat <- merge.stat(stat); print("4. Propagating error")
-print("1. Getting raw data"); stat <- get.stat.table(db, inst=inst); #
-  print("2. Normalizing channel values to 1 µm based"); stat <- normalization(stat, spar=spar)#
-  print("3. Converting normalized light scattering to carbon"); stat <- carbon_conversion(stat, inst=inst); #
-  print("4. Propagating error"); stat <- merge.stat(stat)
-head(stat)
-outlier <- get.outlier.table(db)
-<- get.outlier.table(db)
-outlier
-stat <- merge(stat, outlier, all.x=TRUE)
-head(stat)
-get.clean.stat.table <- function(db, inst=NULL, spar=0.7){#
-#
-  print("1. Getting raw data"); stat <- get.stat.table(db, inst=inst); #
-  print("2. Normalizing channel values to 1 µm based"); stat <- normalization(stat, spar=spar)#
-  print("3. Converting normalized light scattering to carbon"); stat <- carbon_conversion(stat, inst=inst); #
-  print("4. Propagating error"); stat <- merge.stat(stat)#
-#
-  outlier <- get.outlier.table(db)#
-  stat <- merge(stat, outlier, all.x=TRUE)#
-#
-  return(stat)#
-#
-}
-stat <- get.stat.table(db, inst=inst); print("1. Getting raw data")#
-  stat <- normalization(stat, spar=spar); print("2. Normalizing channel values to 1 µm based")
-stat <- get.clean.stat.table(db, inst=NULL, spar=0.7)
-stat <- get.clean.stat.table(db, inst=NULL, spar=0.2)
-param <- "fsc_small"
-paste0(param,".se")
-colnames(stat)
-any(colnames(stat))== paste0(param,".se")
-colnames(stat)
-any(colnames(stat)== paste0(param,".se"))
-param <- 'ff'
-any(colnames(stat)== paste0(param,".se"))
-stat$time <- as.POSIXct(stat$time,format="%FT%T",tz='GMT')#
-  pop <- subset(stat, pop == popname)#
-  if(any(colnames(stat)== paste0(param,".se"))) plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname),...)
-pop <- subset(stat, population == popname)
-popname <- "prochloro"
-stat$time <- as.POSIXct(stat$time,format="%FT%T",tz='GMT')#
-  pop <- subset(stat, population == popname)
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname))
-library(plotCI)
-library(plotrix)
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname))
-param <- 'abundance'
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname))
-param <- "fsc_small"
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname))
-mean(pop$abundance.se / pop$abundance)
-?plotCI
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey')
-param <- 'abundance'
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey')
-popname <- 'picoeuks'
-stat$time <- as.POSIXct(stat$time,format="%FT%T",tz='GMT')#
-  pop <- subset(stat, population == popname)#
-  if(any(colnames(stat)== paste0(param,".se"))) plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey')
-popname <- 'picoeuk'
-stat$time <- as.POSIXct(stat$time,format="%FT%T",tz='GMT')#
-  pop <- subset(stat, population == popname)#
-  if(any(colnames(stat)== paste0(param,".se"))) plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey')
-if(any(colnames(stat)== paste0(param,".se"))) plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey',log='y')
-plotCI
-plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".se")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey')
-head(stat)
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  # ratio of the volume of the stream analyzed by the laser (aka, detectable region) to the whole water stream (200 µm nozzle) for that instrument#
-    if(inst == "740") VC <- 0.136#
-    if(inst == "751") VC <- 0.143#
-    if(inst == "989") VC <- 0.149#
-#
-  DF <- get.raw.stat.table(db)#
-  stat <- flowrate(DF, inst=inst)
-library(popcycle)
-cruise <- "SCOPE_2"#
-    path <- "/Volumes/Ribalet External/SeaFlow-OPP/"#
-    opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
-    vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
-    db <- paste0(path,cruise, "/",cruise,".db")
-inst=NULL
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  # ratio of the volume of the stream analyzed by the laser (aka, detectable region) to the whole water stream (200 µm nozzle) for that instrument#
-    if(inst == "740") VC <- 0.136#
-    if(inst == "751") VC <- 0.143#
-    if(inst == "989") VC <- 0.149#
-#
-  DF <- get.raw.stat.table(db)#
-  stat <- flowrate(DF, inst=inst)
-head(stat)
-id <- which(stat$pop == 'prochloro')
-length(id)
-path <- "/Volumes/Ribalet External/SeaFlow-OPP/"
-library(popcycle)
-list.dirs(path=path)
-list.dirs
-cruiselist <- list.dirs(path=path, recursive=F)
-cruiselist
-?grep
-grep("refilter",cruiselist)
-cruiselist <- list.dirs(path=path, recursive=F)[-grep("refilter",cruiselist)]
-cruiselist
-cruise <-cruiselist[2]
-cruise
-paste0(path,cruise, "/",cruise,".db")
-basename(cruise)
-paste0(path,cruise, "/",basename(cruise),".db")
-#sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")
-t <- sql.dbGetQuery(db, sql)
-library(popcycle)#
-    # sqlite3 path/to/CRUISE.db#
-    # drop view stat;#
-    # sqlite3 path/to/CRUISE.db <path/to/popcycle/inst/sql/popcycle.sql#
-#
-path <- "/Volumes/Ribalet External/SeaFlow-OPP/"#
-#
-cruiselist <- list.dirs(path=path, recursive=F)[-grep("refilter",cruiselist)]
-cruiselist <- cruiselist[-grep("refilter",cruiselist)]
-cruiselist <- list.dirs(path=path, recursive=F)#
-cruiselist <- cruiselist[-grep("refilter",cruiselist)]
-cruiselist
-print(cruise)#
-      #cruise <-cruiselist[2]#
-      db <- paste0(path,cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")#
-#
-    t <- sql.dbGetQuery(db, sql)
-cruise <-cruiselist[2]#
-      db <- paste0(path,cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")
-t <- sql.dbGetQuery(db, sql)
-db
-print(cruise)
-paste0(cruise, "/",basename(cruise),".db")
-print(cruise)#
-      #cruise <-cruiselist[2]#
-      db <- paste0(cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")#
-#
-    t <- sql.dbGetQuery(db, sql)
-head(t)
-t
-sql.dbGetQuery
-system(paste("sqlite3", db, "<~/Documents/DATA/Codes/popcycle/inst/sql/popcycle.sql"))
-paste("sqlite3", db, "<~/Documents/DATA/Codes/popcycle/inst/sql/popcycle.sql")
-path <- "/Volumes/OPPdata/SeaFlow-OPP/"#
-#
-cruiselist <- list.dirs(path=path, recursive=F)#
-cruiselist <- cruiselist[-grep("refilter",cruiselist)]
-print(cruise)#
-      #cruise <-cruiselist[2]#
-      db <- paste0(cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")#
-#
-    t <- sql.dbGetQuery(db, sql)#
-    print(t[1,])#
-    system(paste("sqlite3", db, "<~/Documents/DATA/Codes/popcycle/inst/sql/popcycle.sql"))
-# sqlite3 path/to/CRUISE.db <path/to/popcycle/inst/sql/popcycle.sql#
-#
-path <- "/Volumes/OPPdata/SeaFlow-OPP/"#
-#
-cruiselist <- list.dirs(path=path, recursive=F)#
-cruiselist <- cruiselist[-grep("refilter",cruiselist)]
-cruiselist
-print(cruise)
-cruise <-cruiselist[2]#
-      db <- paste0(cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")#
-#
-    t <- sql.dbGetQuery(db, sql)#
-    print(t[1,])#
-    system(paste("sqlite3", db, "<~/Documents/DATA/Codes/popcycle/inst/sql/popcycle.sql"))
-for(cruise in cruiselist){#
-#
-      print(cruise)#
-      #cruise <-cruiselist[2]#
-      db <- paste0(cruise, "/",basename(cruise),".db")#
-#
-      #sql <- paste0("SELECT * FROM stat")#
-      #sql <- paste0("drop table sfl")#
-      #sql <- paste0("drop table vct")#
-      sql <- paste0("drop view stat")#
-#
-    t <- sql.dbGetQuery(db, sql)#
-    print(t[1,])#
-    system(paste("sqlite3", db, "<~/Documents/DATA/Codes/popcycle/inst/sql/popcycle.sql"))#
-#
-    }
-?get.clean.stat.table
-library(popcycle)#
-    cruise <- "SCOPE_2"#
-    path <- "/Volumes/OPPdata/SeaFlow-OPP/"#
-    opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
-    vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
-    db <- paste0(path,cruise, "/",cruise,".db")
-inst=NULL
-print("1. Getting raw data"); stat <- get.stat.table(db, inst=inst);
-load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))#
-    fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')
-if(is.null(inst)) inst <- get.meta(db)[2]
-load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))
-fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')
-sd(fr)
-head(fr)
-?apply
-apply(fr, 2, sd)
-apply(fr, 1, sd)
-stat$flow_rate.sd <- 10^apply(fr, 1, sd)
-head(stat)
-flowrate <- function(stat, inst=NULL){#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))#
-    fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')#
-#
-    stat$flow_rate <- 10^fr[,"fit"] # mL min-1#
-    stat$flow_rate.sd <- 10^apply(fr, 1, sd)#
-#
-    return(stat)#
-#
-}
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  # ratio of the volume of the stream analyzed by the laser (aka, detectable region) to the whole water stream (200 µm nozzle) for that instrument#
-    if(inst == "740") VC <- 0.136#
-    if(inst == "751") VC <- 0.143#
-    if(inst == "989") VC <- 0.149#
-#
-  DF <- get.raw.stat.table(db)#
-  stat <- flowrate(DF, inst=inst)#
-#
-  # abundance is calculated based on a median value of opp_evt ratio for the entire cruise (volume of virtual core set for an entire cruise)#
-  stat[,c("abundance")]  <- stat[,"n_count"] / (1000*VC * median(stat[,"opp_evt_ratio"], na.rm=T) * stat[,c("flow_rate")] * stat[,"file_duration"]/60)   # cells µL-1#
-  stat[,c("abundance.sd")]  <- stat[,c("abundance")] * stat[,c("flow_rate.sd")] / stat[,c("flow_rate")]           # cells µL-1#
-#
-  # If Prochlorococcus present, abundance is calculated based on individual opp_evt ratio (each file), since it provides more accurate results (see https://github.com/armbrustlab/seaflow-virtualcore)#
-    id <- which(stat$pop == 'prochloro')#
-    if(length(id) > 0){#
-      stat[id,c("abundance")]  <- stat[id,"n_count"] / (1000*VC * stat[id,"opp_evt_ratio"] * stat[id,c("flow_rate")] * stat[id,"file_duration"]/60)   # cells µL-1#
-      stat[id,c("abundance.sd")]  <- stat[id,c("abundance")] * stat[id,c("flow_rate.sd")] / stat[id,c("flow_rate")]           # cells µL-1#
-    }
-head(stat)
-#check that there is beads in the table#
-  if(!any(unique(stat$pop) == 'beads')){#
-    print("no beads found, normalization can't be done")#
-    stop#
-  }#
-#
-  time <- as.POSIXct(stat$time, format = "%FT%T", tz = "GMT")#
-  beads <- subset(stat, pop =='beads' & quantile== 50)#
-    beads$time <- as.POSIXct(beads$time, format = "%FT%T", tz = "GMT")#
-#
-    channels <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp")#
-#
-  par(mfrow=c(3,2),cex=1.2, mar=c(2,5,1,1), oma=c(1,1,1,1))#
-#
-    for(para in channels){#
-          smooth <- smooth.spline(beads$time, beads[,para],spar=spar)#
-          smooth.beads <- spline(smooth$x, smooth$y, xout=unique(time))#
-          plot(beads$time, beads[,para], ylim=c(1, 10^3.5), log='y', xlab=NA, ylab=paste(para))#
-            lines(smooth.beads, col=2, lwd=3)#
-          id <- findInterval(time,beads$time)#
-          stat[,para] <- stat[,para] / smooth.beads$y[id]#
-          }
-spar=0.7
-#check that there is beads in the table#
-  if(!any(unique(stat$pop) == 'beads')){#
-    print("no beads found, normalization can't be done")#
-    stop#
-  }#
-#
-  time <- as.POSIXct(stat$time, format = "%FT%T", tz = "GMT")#
-  beads <- subset(stat, pop =='beads' & quantile== 50)#
-    beads$time <- as.POSIXct(beads$time, format = "%FT%T", tz = "GMT")#
-#
-    channels <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp")#
-#
-  par(mfrow=c(3,2),cex=1.2, mar=c(2,5,1,1), oma=c(1,1,1,1))#
-#
-    for(para in channels){#
-          smooth <- smooth.spline(beads$time, beads[,para],spar=spar)#
-          smooth.beads <- spline(smooth$x, smooth$y, xout=unique(time))#
-          plot(beads$time, beads[,para], ylim=c(1, 10^3.5), log='y', xlab=NA, ylab=paste(para))#
-            lines(smooth.beads, col=2, lwd=3)#
-          id <- findInterval(time,beads$time)#
-          stat[,para] <- stat[,para] / smooth.beads$y[id]#
-          }
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("cbiomass", paste0("lm_",inst),package='popcycle'))#
-  qc <- predict(reg, newdata=data.frame(norm.fsc=log10(stat$fsc_small)),interval='predict')
-head(qc)
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("cbiomass", paste0("lm_",inst),package='popcycle'))#
-  qc <- predict(reg, newdata=data.frame(norm.fsc=log10(stat$fsc_small)),interval='predict')#
-#
-  stat[,"Qc"] <- 10^qc[,"fit"] * 1000        # fgC cell-1#
-  stat[,"Qc.sd"] <-   10^apply(qc, 1, sd)   # fgC cell-1#
-  stat[,"Cbiomass"] <- stat[,"Qc"] * stat[,"abundance"] / 1000      # pgC L-1#
-  stat[,"Cbiomass.sd"] <- stat[,"Cbiomass"] * (stat[,"abundance.sd"] / stat[,"abundance"] + stat[,"Qc.sd"] / stat[,"Qc"]) # pgC L-1
-head(stat)
-head(qc)
-head(apply(qc, 1, sd))
-if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("cbiomass", paste0("lm_",inst),package='popcycle'))#
-  qc <- predict(reg, newdata=data.frame(norm.fsc=log10(stat$fsc_small)),interval='predict')#
-#
-  stat[,"Qc"] <- 10^qc[,"fit"] * 1000        # fgC cell-1#
-  stat[,"Qc.sd"] <-   10^apply(qc, 1, sd) * 1000  # fgC cell-1#
-  stat[,"Cbiomass"] <- stat[,"Qc"] * stat[,"abundance"] / 1000      # pgC L-1#
-  stat[,"Cbiomass.sd"] <- stat[,"Cbiomass"] * (stat[,"abundance.sd"] / stat[,"abundance"] + stat[,"Qc.sd"] / stat[,"Qc"]) # pgC L-1
-head(stat)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      df.se <- df.sd/sqrt(6) # Calculate SE from SD#
-      colnames(df.se) <- paste0(para,".se")#
-#
-      DF <- cbind(df.mean,df.se)#
-      DF <- DF[order(DF$time),]
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".se")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".se")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".sd")#
-#
-      DF <- cbind(df.mean,df.sd)#
-      DF <- DF[order(DF$time),]
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".sd")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".sd")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".sd")#
-#
-      DF <- cbind(df.mean,df.sd)#
-      DF <- DF[order(DF$time),]
-head(DF)
-head(stat[,"abundance.sd"] / stat[,"abundance"])
-head(stat[,"Qc.sd"] / stat[,"Qc"])
-head(apply(fr, 1, sd)/fr[,"fit"])
-head(stat$flow_rate*apply(fr, 1, sd)/fr[,"fit"])
-flowrate
-head(2.303 * stat$flow_rate*apply(fr, 1, sd))
-stat <- get.raw.stat.table(db)
-head(stat)
-#' @export#
-flowrate <- function(stat, inst=NULL){#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))#
-    fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')#
-#
-    stat$flow_rate <- 10^fr[,"fit"] # mL min-1#
-    stat$flow_rate.sd <- 2.303 * stat$flow_rate * apply(fr, 1, sd)) # uncertainties Antilog, based 10 : y=10^a so Sy= 2.303 * y * Sa#
-#
-    return(stat)#
-#
-}
-flowrate <- function(stat, inst=NULL){#
-#
-  if(is.null(inst)) inst <- get.meta(db)[2]#
-#
-  load(system.file("flowrate", paste0("lm_",inst),package='popcycle'))#
-    fr <- predict(reg, newdata=data.frame(measured.pressure=log10(stat$stream_pressure)),interval='predict')#
-#
-    stat$flow_rate <- 10^fr[,"fit"] # mL min-1#
-    stat$flow_rate.sd <- 2.303 * stat$flow_rate * apply(fr, 1, sd) # uncertainties Antilog, based 10 : y=10^a so Sy= 2.303 * y * Sa#
-#
-    return(stat)#
-#
-}
-stat <- flowrate(stat, inst=inst)
-head(stat)
-stat[,c("abundance")]  <- stat[,"n_count"] / (1000*VC * median(stat[,"opp_evt_ratio"], na.rm=T) * stat[,"flow_rate"] * stat[,"file_duration"]/60)   # cells µL-1#
-  stat[,c("abundance.sd")]  <- stat[,"abundance"] * stat[,"flow_rate.sd"] / stat[,"flow_rate"]           # cells µL-1#
-#
-  # If Prochlorococcus present, abundance is calculated based on individual opp_evt ratio (each file), since it provides more accurate results (see https://github.com/armbrustlab/seaflow-virtualcore)#
-    id <- which(stat$pop == 'prochloro')#
-    if(length(id) > 0){#
-      stat[id,c("abundance")]  <- stat[id,"n_count"] / (1000*VC * stat[id,"opp_evt_ratio"] * stat[id,"flow_rate"] * stat[id,"file_duration"]/60)   # cells µL-1#
-      stat[id,c("abundance.sd")]  <- stat[id,"abundance"] * stat[id,"flow_rate.sd"] / stat[id,"flow_rate"]           # cells µL-1#
-    }
-head(stat)
-#check that there is beads in the table#
-  if(!any(unique(stat$pop) == 'beads')){#
-    print("no beads found, normalization can't be done")#
-    stop#
-  }#
-#
-  time <- as.POSIXct(stat$time, format = "%FT%T", tz = "GMT")#
-  beads <- subset(stat, pop =='beads' & quantile== 50)#
-    beads$time <- as.POSIXct(beads$time, format = "%FT%T", tz = "GMT")#
-#
-    channels <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp")#
-#
-  par(mfrow=c(3,2),cex=1.2, mar=c(2,5,1,1), oma=c(1,1,1,1))#
-#
-    for(para in channels){#
-          smooth <- smooth.spline(beads$time, beads[,para],spar=spar)#
-          smooth.beads <- spline(smooth$x, smooth$y, xout=unique(time))#
-          plot(beads$time, beads[,para], ylim=c(1, 10^3.5), log='y', xlab=NA, ylab=paste(para))#
-            lines(smooth.beads, col=2, lwd=3)#
-          id <- findInterval(time,beads$time)#
-          stat[,para] <- stat[,para] / smooth.beads$y[id]#
-          }
-load(system.file("cbiomass", paste0("lm_",inst),package='popcycle'))#
-  qc <- predict(reg, newdata=data.frame(norm.fsc=log10(stat$fsc_small)),interval='predict')#
-#
-  stat[,"Qc"] <- 10^qc[,"fit"] * 1000        # fgC cell-1#
-  stat[,"Qc.sd"] <-   2.303 * stat[,"Qc"] * apply(qc, 1, sd) # uncertainties Antilog, based 10 : y=10^a so Sy= 2.303 * y * Sa#
-  stat[,"Cbiomass"] <- stat[,"Qc"] * stat[,"abundance"] / 1000      # pgC L-1#
-  stat[,"Cbiomass.sd"] <- stat[,"Cbiomass"] * sqrt((stat[,"abundance.sd"] / stat[,"abundance"])^2 + (stat[,"Qc.sd"] / stat[,"Qc"])^2) # pgC L-1
-head(stat)
-para <- c("abundance", "Qc","Cbiomass")#
-    lwr <- upr <- stat#
-      for(p in para) lwr[,p] <- stat[,p]-stat[,paste0(p,".sd")]#
-      for(p in para) upr[,p] <- stat[,p]+stat[,paste0(p,".sd")]#
-      df <- rbind(lwr,upr)#
-#
-    para <- colnames(stat)[-c(1,2,13,21,23,25,27,29)]#
-      df.mean <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=mean)#
-      df.mean$file <- stat[match(df.mean$time, stat$time),"file"]#
-#
-    para <- c("D1","D2","fsc_small","chl_small","pe","fsc_perp","abundance", "Qc","Cbiomass")#
-      df.sd <- aggregate(df[,para], by=list(time=df$time, population=df$pop), FUN=sd)[,-c(1,2)]#
-      colnames(df.sd) <- paste0(para,".sd")#
-#
-      DF <- cbind(df.mean,df.sd)#
-      DF <- DF[order(DF$time),]
-head(DF)
-log(10)
-plot.time
-library(popcycle)#
-    cruise <- "SCOPE_2"#
-    path <- "/Volumes/OPPdata/SeaFlow-OPP/"#
-    opp.dir <- paste0(path,cruise, "/",cruise,"_opp")#
-    vct.dir <- paste0(path,cruise, "/", cruise, "_vct")#
-    db <- paste0(path,cruise, "/",cruise,".db")
-stat <- get.clean.stat.table(db, spar=0.7)
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="abundance", xlim=lim.t)    #
-	}
-lim.t <- c(min(as.POSIXct(stat$time),na.rm=T), max(as.POSIXct(stat$time),na.rm=T))#
-phyto <- unique(stat$population)#
-#
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))
-plot.time(stat popname=i, param="abundance", xlim=lim.t)
-plot.time(stat, popname=i, param="abundance", xlim=lim.t)
-for(i in phyto){#
-        plot.time(stat, popname=i, param="abundance", xlim=lim.t)    #
-	}
-head9stat
-head(stat)
-plot.time
-plot.time <- function(stat, popname,param, ...){#
-  require(plotrix, quietly=T)#
-#
-  stat$time <- as.POSIXct(stat$time,format="%FT%T",tz='GMT')#
-  pop <- subset(stat, population == popname)#
-  if(any(colnames(stat)== paste0(param,".sd"))) plotCI(pop$time, pop[,param], uiw=pop[,paste0(param,".sd")], sfrac=0,xlab="Time", ylab=paste(param),main=paste(popname), scol='grey',...)#
-  else plot(pop$time, pop[,param], xlab="Time", ylab=paste(param),main=paste(popname),...)#
-}
-for(i in phyto){#
-        plot.time(stat, popname=i, param="abundance", xlim=lim.t)    #
-	}
-for(i in phyto){#
-        plot.time(stat, popname=i, param="Qc", xlim=lim.t)    #
-	}
-for(i in phyto){#
-        plot.time(stat, popname=i, param="Cbiomass", xlim=lim.t)    #
-	}
-head(stat)
-clean <- subset(stat, flag == 0)
-for(i in phyto){#
-        plot.time(clean, popname=i, param="abundance", xlim=lim.t)    #
-	}
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="abundance", xlim=lim.t)    #
-	}
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="Cbiomass", xlim=lim.t)    #
-	}
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="Qc", xlim=lim.t)    #
-	}
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="fsc_small", xlim=lim.t)    #
-	}
-cex <- 1#
-par(mfrow=c(ceiling(length(phyto)/2),2), cex=cex, mar=c(2,4,2,3), oma=c(2,1,1,1))#
-for(i in phyto){#
-        plot.time(clean, popname=i, param="abundance", xlim=lim.t)    #
-	}
-stat <- get.clean.stat.table(db, spar=0.7)
-clean <- subset(stat, flag == 0)
-plot.time(clean, popname='prochloro', param='abundance',log='y')
-plot.time(clean, popname='prochloro', param='abundance')
-plot.time(clean, popname='picoeuk', param='abundance')
-plot.time(clean, popname='prochloro', param='abundance',log='y')
-plot.time(clean, popname='picoeuk', param='abundance',log='y')
-par(mfrow=c(4,2))#
-    plot.time(clean, popname='prochloro', param='abundance')#
-    plot.time(clean, popname='picoeuk', param='abundance')#
-    plot.time(clean, popname='prochloro', param='fsc_small')#
-    plot.time(clean, popname='picoeuk', param='fsc_small')#
-    plot.time(clean, popname='prochloro', param='Qc')#
-    plot.time(clean, popname='picoeuk', param='Qc')#
-    plot.time(clean, popname='prochloro', param='Cbiomass')#
-    plot.time(clean, popname='picoeuk', param='Cbiomass')
-sqrt(1.5^2 + 4^2)
-library(lattice)#
-library(lmodel2)#
-library(popcycle)#
-#
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
-#
-allcruises <- c("SCOPE_6", "DeepDOM", "MBARI_1","SCOPE_16")#
-cruise <- allcruises[2]#
-DF <- NULL#
-for(cruise in allcruises){#
-#
-print(cruise)#
-#
-### SFL + INFLUX#
-if(cruise == 'DeepDOM'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
-                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
-                      influx <- read.delim(paste0(cruise,"data/surface_samples_metadata.tab"))#
-                        influx$time <- as.POSIXct(influx$Date.Time, format="%m/%d/%y %H:%M", tz="GMT")#
-                        }#
-if(cruise == 'SCOPE_16'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
-                            sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
-                            sfl$file <- basename(as.character(sfl$file))#
-                          influx <- read.csv(paste0(cruise,"data/all_station_curated.csv"))#
-                            influx$time_HST <- as.POSIXct(influx$time_HST, format="%m/%d/%y %H:%M", tz="HST")#
-                            influx <- influx[order(influx$time_HST), ]#
-                            influx <- subset(influx, Depth_m < 16)#
-                            pro <- subset(influx, population == 'prochloro')#
-                            syn <- subset(influx, population == 'synecho')#
-                            picoeuk <- subset(influx, population == 'picoeuk')#
-                          influx <- data.frame(cbind(time=pro$time_HST, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance))#
-                            influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")#
-                              }#
-if(cruise == 'MBARI_1'){sfl <- read.delim(paste0(cruise,"data/cruise.sfl"))#
-                        sfl$date <- as.POSIXct(sfl$DATE, format = "%FT%T", tz = "GMT")#
-                        sfl$file <- sfl[,"FILE"]#
-                        sfl$stream_pressure <- sfl[,"STREAM.PRESSURE"]#
-                      influx <- read.csv(paste0(cruise,"data/mbari_summary.csv"))#
-                        id <- match(influx[,'file'],sfl[,"FILE"])#
-                        influx$time <- sfl[id, 'date']#
-                        influx$pro <- influx$pro / 1000#
-                        influx$syn <- influx$syn / 1000#
-                        influx$pico <- influx$picoeuks / 1000#
-                          }#
-if(cruise == 'SCOPE_6'){sfl <- read.csv(paste0(cruise,"data/sfl.csv"))#
-                        sfl$date <- as.POSIXct(sfl$date, format = "%FT%T", tz = "GMT")#
-                        sfl$stream_pressure <- median(sfl$stream_pressure, na.rm=T)#
-                        sfl$file <- basename(as.character(sfl$file))#
-                      influx <- read.csv(paste0(cruise,"data/influx.csv"))#
-                        influx$time <- as.POSIXct(influx$time, tz="GMT")#
-                        pro <- subset(influx, pop == 'prochloro')#
-                        syn <- subset(influx, pop == 'synecho')#
-                        picoeuk <- subset(influx, pop == 'picoeuk')#
-                        crocco <- subset(influx, pop == 'crocco')#
-                          influx <- data.frame(cbind(time=pro$time, pro=pro$abundance, syn=syn$abundance, pico=picoeuk$abundance+crocco$abundance))#
-                          influx$time <- as.POSIXct(influx$time, origin='1970-01-01',tz="GMT")#
-                        }#
-influx <- influx[order(influx$time), ]#
-### SEAFLOW#
-if(cruise == "SCOPE_6") inst <- 740#
-if(cruise == "DeepDOM" | cruise == "MBARI_1") inst <- 989#
-if(cruise == "SCOPE_16") inst <- 751#
-#
-ALL <- read.csv(paste0(cruise,"data/seaflow-summary.csv"))#
-if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]#
-if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]#
-#
-  ALL$cruise <- cruise#
-  id2 <- match(ALL[,'file'],as.character(sfl[,"file"]))#
-  ALL$time <- sfl[id2, 'date'] # add time#
-    ALL <- ALL[order(ALL$time), ]#
-#
-  sfl$flow_rate2 <- flowrate(sfl, inst =inst)[,"flow_rate"]#
-  ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate#
-#
-  # add abundance from INFLUX#
-  id <- findInterval(ALL$time,influx$time)#
-  if(cruise =="DeepDOM"| cruise == "SCOPE_16") id <- id +1#
-  for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]#
-  ############### TEST different VC method ####################################
-  ALL$vc1 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1#
-  ALL$vc2 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2#
-  ALL$vc3 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3#
-  ALL$vc4 <- 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4#
-  # calculate abundance from Seaflow#
-  for (phyto in c('pro','syn','pico')){#
-      ALL[,paste0(phyto,'.seaflow.each1')] <- ALL[,phyto] / ALL$vc1#
-      ALL[,paste0(phyto,'.seaflow.median1')] <- ALL[,phyto] / median(ALL$vc1)#
-      ALL[,paste0(phyto,'.seaflow.each2')] <- ALL[,phyto] / ALL$vc2#
-      ALL[,paste0(phyto,'.seaflow.median2')] <- ALL[,phyto] / median(ALL$vc2)#
-      ALL[,paste0(phyto,'.seaflow.each3')] <- ALL[,phyto] / ALL$vc3#
-      ALL[,paste0(phyto,'.seaflow.median3')] <- ALL[,phyto] / median(ALL$vc3)#
-      ALL[,paste0(phyto,'.seaflow.each4')] <- ALL[,phyto] / ALL$vc4#
-      ALL[,paste0(phyto,'.seaflow.median4')] <- ALL[,phyto] / median(ALL$vc4)#
-      }#
-#
-          # par(mfrow=c(3,1),cex=1.2)#
-          # for (phyto in c('pro','syn','pico')){#
-          #         plot(ALL[,'time'],ALL[,paste0(phyto,'.influx')],ylim=c(0,2*max(ALL[,paste0(phyto,'.influx')])),type='o', ylab="abundance", xlab=NA, main=paste(phyto))#
-          #         for(s in 1:4){#
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.each',s)],col=s)#
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.median',s)],col=s, pch=2)#
-          #           }#
-          #         }#
-#
-    # calculate error between seaflow-based and influx-based abundance#
-    for (phyto in c('pro','syn','pico')){#
-      for(s in 1:4){#
-        ALL[,paste0(phyto,".diff.each",s)] <- abs(ALL[,paste0(phyto,'.seaflow.each',s)] - ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]#
-        ALL[,paste0(phyto,".diff.median",s)] <- abs(ALL[,paste0(phyto,'.seaflow.median',s)] -ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]#
-            }#
-      }#
-#
-          # par(mfrow=c(3,1),cex=1.2)#
-          # for (phyto in c('pro','syn','pico')){#
-          #         plot(ALL[,'time'],rep(0, nrow(ALL)),ylim=c(0,1),type='l', ylab="Diff", xlab=NA, main=paste(phyto))#
-          #         for(s in 1:4){#
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.each',s)],col=s)#
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.median',s)],col=s, pch=2)#
-          #           }#
-          #         }#
-    DF <- rbind(DF,ALL)#
-#
-  }#
-write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
-###################
-### 3. BEST VC ####
-###################
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
-DF <- read.csv("SeaflowInflux_comparison.csv")#
-#
-DF$time <- as.POSIXct(DF$time, tz='GMT')#
-DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
-DF.a$cruise <- DF.a$Group.1#
-#
-# add a color for each cruise#
-i <- 1#
-for(cruise in unique(DF$cruise)){#
-    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
-    i <- i + 1#
-  }#
-VC <- NULL#
-par(mfrow=c(4,3),cex=1.2, pty='m')#
-for(c in unique(DF$cruise)){#
-  print(c)#
-    df <- subset(DF.a, cruise == c)#
-    for (phyto in c('pro','syn','pico')){#
-      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
-      for(s in 1:4){#
-        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
-        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
-        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
-        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
-        vc <- data.frame(cbind(each, median))#
-        vc$cruise <- c#
-        vc$phyto <- phyto#
-        vc$vc.method <- s#
-        VC <- rbind(VC, vc)#
-        }#
-    }#
-  }#
-   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
-   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
-   print(paste("best VC method is:",best.vc.method))
-###################
-### 3. BEST VC ####
-###################
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")#
-DF <- read.csv("SeaflowInflux_comparison.csv")#
-#
-DF$time <- as.POSIXct(DF$time, tz='GMT')#
-DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)#
-DF.a$cruise <- DF.a$Group.1#
-#
-# add a color for each cruise#
-i <- 1#
-for(cruise in unique(DF$cruise)){#
-    DF[which(DF$cruise == cruise),'col.cruise'] <- i#
-    i <- i + 1#
-  }#
-VC <- NULL#
-par(mfrow=c(4,3),cex=1.2, pty='m')#
-for(c in unique(DF$cruise)){#
-  print(c)#
-    df <- subset(DF.a, cruise == c)#
-    for (phyto in c('pro','syn','pico')){#
-      plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))#
-      for(s in 1:4){#
-        points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)#
-        points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)#
-        each <- mean(df[,paste0(phyto, ".diff.each",s)])#
-        median <- mean(df[,paste0(phyto, ".diff.median",s)])#
-        vc <- data.frame(cbind(each, median))#
-        vc$cruise <- c#
-        vc$phyto <- phyto#
-        vc$vc.method <- s#
-        VC <- rbind(VC, vc)#
-        }#
-    }#
-  }#
-   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), mean)#
-   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))#
-   print(paste("best VC method is:",best.vc.method))
-#######################
-### 4. BEST OFFSET ####
-#######################
+plot.vct.cytogram <- function (opp, para.x = "fsc_small", para.y = "chl_small", ...)#
+          {#
+        plot(opp[, c(para.x, para.y)], pch = 16, cex = 0.3, col = as.numeric(as.factor(opp$pop)),#
+                    xlim = c(1, 10^4), ylim = c(1, 10^4), log='xy', ...)#
+              legend("topleft", legend = (unique(opp$pop)), col = unique(as.numeric(as.factor(opp$pop))),#
+                  pch = 16, pt.cex = 0.6, bty = "n")#
+                    }
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL
+summary.table$abundance_cells.mL[37:60]
+summary.table
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))
+summary.table
+summary.table$abundance_cells.mL[37:60]
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] * 2
+WARNING: CYANOBACTERIA cultures were diluted 100X before counting (see 2nd line in notebook Influx-notebook/harvest3.jpg), Micromonas pusilla was dilutd 5 times.#
+summary.table$abundance_cells.mL[37:60] <- summary.table$abundance_cells.mL[37:60] * 100#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5#
+beads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)#
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste("influx-cultures.csv", sep=""), row.names=FALSE)#
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)
 library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
 #
-s <- best.vc.method#
-REG <- NULL#
-for(offset in unique(DF$corr)){#
-  df <- subset(DF, corr==offset)#
-  reg.pro <- lm(df[,paste0("pro.seaflow.each",s)] ~ pro.influx, data=df)#
-  reg.syn <- lm(df[,paste0("syn.seaflow.median",s)] ~ syn.influx, data=df)#
-  reg.pico <- lm(df[,paste0("pico.seaflow.median",s)] ~ pico.influx, data=df)#
-  reg <- data.frame(cbind(offset, reg.pro=reg.pro$coefficient[2], reg.syn=reg.syn$coefficient[2], reg.pico=reg.pico$coefficient[2]))#
-  REG <- rbind(REG, reg)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("calibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+mie <- read.csv("INFLUXcalibrated-mie.csv")
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
+#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL#
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] * 2#
+#
+# WARNING: CYANOBACTERIA cultures were diluted 100X before counting (see 2nd line in notebook Influx-notebook/harvest3.jpg), Micromonas pusilla was dilutd 5 times.#
+summary.table$abundance_cells.mL[37:60] <- summary.table$abundance_cells.mL[37:60] * 100#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5#
+beads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste("influx-cultures.csv", sep=""), row.names=FALSE)
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+lot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)]
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] * 2
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)]
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)
+cultures$Sample.ID
+cultures
+cultures
+cultures
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL
+summary.table$abundance_cells.mL
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] * 2
+summary.table$abundance_cells.mL
+# WARNING: CYANOBACTERIA cultures were diluted 100X before counting (see 2nd line in notebook Influx-notebook/harvest3.jpg), Micromonas pusilla was dilutd 5 times.#
+summary.table$abundance_cells.mL[37:60] <- summary.table$abundance_cells.mL[37:60] * 100#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5
+eads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)
+cultures
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste("influx-cultures.csv", sep=""), row.names=FALSE)
+cultures <- read.csv("influx-cultures.csv")
+cultures
+ath.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)
+merge
+poc
+merge
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")
+cultures
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL#
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] * 2#
+#
+# WARNING: CYANOBACTERIA cultures were diluted 100X before counting (see 2nd line in notebook Influx-notebook/harvest3.jpg), Micromonas pusilla was dilutd 5 times.#
+summary.table$abundance_cells.mL[37:60] <- summary.table$abundance_cells.mL[37:60] * 100#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5#
+beads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste("influx-cultures.csv", sep=""), row.names=FALSE)
+paste("influx-cultures.csv", sep="")
+paste(path.to.git.repository,"/influx-cultures.csv", sep="")
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL#
+summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] <- summary.table$abundance_cells.mL[c(37:40,45:48,49:56)] / 2#
+#
+# WARNING: CYANOBACTERIA cultures were diluted 100X before counting (see 2nd line in notebook Influx-notebook/harvest3.jpg), Micromonas pusilla was dilutd 5 times.#
+summary.table$abundance_cells.mL[37:60] <- summary.table$abundance_cells.mL[37:60] * 100#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5#
+beads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)#
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste(path.to.git.repository,"/influx-cultures.csv", sep=""), row.names=FALSE)#
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)#
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
+#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+path.to.data <- "~/Documents/DATA/Codes/fsc-poc-calibration/fsc-poc-calibration-data"#
+setwd(path.to.data)#
+summary.table <- read.csv(file=paste("influx_raw_summary.csv", sep=""))#
+#
+volume <- c(rep(500.3,2), rep(500.5,2),rep(496,2),rep(500.12,2),rep(300.3,2),rep(300.22,2),rep(300.45,2), rep(300,2), rep(150.46,2), rep(200.18,2),rep(150.2,2), rep(200.1,2),rep(300.28,2),rep(302,2),rep(200.57,2),rep(199.97,2),rep(300.25,2),#
+            rep(300.24,2),rep(99.9,2),rep(100.13,2),rep(99.87,2),rep(99.84,2),rep(100.05,2),rep(99.98,2),rep(100.2,2),rep(100.2,2),rep(99.93,2),rep(99.9,2),rep(100.07,2),rep(100.07,2))#
+name <- rep(c("EHux","Licmo","Micro","Navicula","PT-632","PT-632","TAPS-1335","TAPS-3367","TW-3365","Pro 1314", "Syn 7803", "Pro AS9601", "Pro Med4","Pro Nat12A", "Syn WH8102"),each=4)#
+#
+### CALCULATE CELL ABUNDANCE#
+summary.table$volume.uL <- volume#
+summary.table$abundance_cells.mL <- 1000 * summary.table$n / summary.table$volume.uL # cells / mL#
+#
+# WARNING: Small size phytoplankton cultures were dilutd before counting (see Influx-notebook/harvest1.jpg, harvest2.jpg Influx-notebook/harvest3.jpg).#
+#
+summary.table$abundance_cells.mL[c(37:40,45:56)] <- summary.table$abundance_cells.mL[c(37:40,45:56)] * 50 # Prochlorococcus cultures were diluted 50X#
+summary.table$abundance_cells.mL[c(41:44,57:60)] <- summary.table$abundance_cells.mL[c(41:44,57:60)] * 100 # Synechococcus cultures were diluted 100X#
+summary.table$abundance_cells.mL[9:12] <- summary.table$abundance_cells.mL[9:12] * 5 #Micromonas pusilla was dilutd 5 times#
+beads <- subset(summary.table, i == 'beads')#
+cultures <- subset(summary.table, i == 'picoeuk')#
+print(paste("Does rows of 'beads' and rows of 'cultures' match?",unique(cultures$file == beads$file)))#
+cultures$norm.fsc <- round(cultures$fsc/beads$fsc,2)#
+cultures$norm.chl <- round(cultures$fsc/beads$chl,2)#
+write.csv(cultures[,c("file","n","volume.uL","abundance_cells.mL","norm.fsc", "norm.chl")],file=paste(path.to.git.repository,"/influx-cultures.csv", sep=""), row.names=FALSE)#
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)#
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
+#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
+#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+library(scales)#
+library(viridis)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+#
+png("Qc-scatter.png",width=12, height=6, unit='in', res=200)#
+par(mfrow=c(1,2), pty='s',cex=1.2)#
+#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
 }#
-REG$reg.all <- rowMeans(abs(REG[,c("reg.pro", "reg.syn", "reg.pico")]-1))#
-best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']#
-print(paste("best OFFET is:",best.offset))
-t <- 0.4#
-par(mfrow=c(3,2), pty='s',cex=1.2)#
-  df <- subset(DF, corr==best.offset)#
-  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370), las=1); abline(b=1, a=0, lty=2)#
-    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
-    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370),las=1); abline(b=1, a=0, lty=2)#
-  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)#
-    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150),las=1); abline(b=1, a=0, lty=2)#
-  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)#
-    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50),las=1); abline(b=1, a=0, lty=2)
-t <- 0.6#
-par(mfrow=c(4,3), pty='m',cex=1.2)#
-  df2 <- subset(DF, corr==best.offset)#
-  for(c in rev(unique(df2$cruise))){#
-    df <- subset(df2, cruise == c)#
-    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")])/2, max(df[,paste0("pro.influx")])*1.5), las=1)#
-    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))#
-    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")])/2, max(df[,paste0("syn.influx")])*2), las=1)#
-    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
-    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)#
-    plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")])/2, max(df[,paste0("pico.influx")])*2), las=1)#
-    points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
-#
-    print(c)#
-    print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))#
-    print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))#
-    print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))#
-  }
-png(paste0("SeaFlowInflux-ALLcomparison.png"),width=12, height=15, unit='in', res=500)#
-#
-t <- 0.4#
-par(mfrow=c(3,2), pty='s',cex=1.2)#
-  df <- subset(DF, corr==best.offset)#
-  plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370), las=1); abline(b=1, a=0, lty=2)#
-    legend('topleft',legend=unique(df$cruise),pt.bg=alpha(unique(df$col.cruise),t), pch=21,bty='n',cex=0.8)#
-    plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Prochlorococcus",ylim=c(1,370),xlim=c(1,370),las=1); abline(b=1, a=0, lty=2)#
-  plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0,150),ylim=c(0,150),las=1); abline(b=1, a=0, lty=2)#
-    plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Synechococcus",xlim=c(0.1,150),ylim=c(0.1,150),las=1); abline(b=1, a=0, lty=2)#
-  plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0,50),ylim=c(0,50),las=1); abline(b=1, a=0, lty=2)#
-    plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)],log='xy', xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha(df$col.cruise,t), main="Picoeukaryotes",xlim=c(0.1,50),ylim=c(0.1,50),las=1); abline(b=1, a=0, lty=2)#
-#
-dev.off()#
-png(paste0("SeaFlowInflux-CRUISEcomparison.png"),width=12, height=15, unit='in', res=500)#
-#
-t <- 0.6#
-par(mfrow=c(4,3), pty='m',cex=1.2)#
-  df2 <- subset(DF, corr==best.offset)#
-  for(c in rev(unique(df2$cruise))){#
-    df <- subset(df2, cruise == c)#
-    plot(df[,"time"], df[,paste0("pro.influx")], ylab='Pro (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), ylim=c(min(df[,paste0("pro.influx")])/2, max(df[,paste0("pro.influx")])*1.5), las=1)#
-    points(df[,"time"], df[,paste0("pro.seaflow.each",s)], pch=21, bg=alpha(df$col.cruise,t))#
-    plot(df[,"time"], df[,paste0("syn.influx")], ylab='Syn (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t), main=paste(c), ylim=c(min(df[,paste0("syn.influx")])/2, max(df[,paste0("syn.influx")])*2), las=1)#
-    points(df[,"time"], df[,paste0("syn.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
-    legend('top',legend=c("influx","SeaFlow"), pch=c(3,21),bty='n',cex=0.8)#
-    plot(df[,"time"], df[,paste0("pico.influx")], ylab='Pico (cell µL-1)', xlab=NA, pch=3, col=alpha(df$col.cruise,t),ylim=c(min(df[,paste0("pico.influx")])/2, max(df[,paste0("pico.influx")])*2), las=1)#
-    points(df[,"time"], df[,paste0("pico.seaflow.median",s)], pch=21, bg=alpha(df$col.cruise,t))#
-#
-    print(c)#
-    print(mean(df[,paste0("pro.seaflow.each",s)]/mean(df[,paste0("pro.influx")])))#
-    print(mean(df[,paste0("syn.seaflow.median",s)]/mean(df[,paste0("syn.influx")])))#
-    print(mean(df[,paste0("pico.seaflow.median",s)]/mean(df[,paste0("pico.influx")])))#
-  }#
-#
-dev.off()#
-print(mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")])))#
-print(mean(df2[,paste0("syn.seaflow.median",s)]/mean(df2[,paste0("syn.influx")])))#
-print(mean(df2[,paste0("pico.seaflow.median",s)]/mean(df2[,paste0("pico.influx")])))
-mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")]))
-d1 <- mean(df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")]))#
-d2 <- mean(df2[,paste0("syn.seaflow.median",s)]/mean(df2[,paste0("syn.influx")]))#
-d3 <- mean(df2[,paste0("pico.seaflow.median",s)]/mean(df2[,paste0("pico.influx")]))#
-print(d1, d2, d3)
-1
-df2[,paste0("pro.seaflow.each",s)]/mean(df2[,paste0("pro.influx")])
-d1 <- mean(df2[,paste0("pro.seaflow.each",s)])/mean(df2[,paste0("pro.influx")])#
-d2 <- mean(df2[,paste0("syn.seaflow.median",s)])/mean(df2[,paste0("syn.influx")])#
-d3 <- mean(df2[,paste0("pico.seaflow.median",s)])/mean(df2[,paste0("pico.influx")])#
-pr
-print(d1, d2, d3)
-d1
-d2
-d3
-print(d1, d2, d3)
-print(paste(d1, d2, d3))
-print(paste(mean(c(d1,d2,d3))))
-17*1.35
-16.6*1.3
-d1 <- mean(df2[,paste0("pro.seaflow.each",s)])/mean(df2[,paste0("pro.influx")])#
-d2 <- mean(df2[,paste0("syn.seaflow.median",s)])/mean(df2[,paste0("syn.influx")])#
-d3 <- mean(df2[,paste0("pico.seaflow.median",s)])/mean(df2[,paste0("pico.influx")])#
-print(paste(d1, d2, d3))#
-print(paste(mean(c(d1,d2,d3))))
-setwd("~/Documents/DATA/Codes/seaflow-sfl")#
-#
-inst <- "751" # or "751"#
-#
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-fr$fr <- 60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
-#
-inst <- "751" # or "751"#
-#
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-fr$fr <- 60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
-fr
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
-summary(reg)
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.35 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
-summary(reg)
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
-#
-inst <- "751" # or "751"#
-#
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.2 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
-summary(reg)
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
-zero <- 1.25 #correction for pressure sensor not being zero'ed.
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.25 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
-summary(reg)
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))
-### Path to the Git repository#
-setwd("~/Documents/DATA/Codes/seaflow-virtualcore")#
-#
-inst <- "751" # or "751"#
-#
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.25 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
-summary(reg)#
-#
-save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
-#
-png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
-#
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
 #
 dev.off()
-inst <- "740" # #
+par(mfrow=c(1,2), pty='s',cex=1.2)#
 #
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.25 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}
+merge
+library(flowCore)#
+library(splancs)#
+library(plotrix)#
+library(caroline)#
+library(popcycle)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))
+##############################
+#### 3. FSC NORMALIZATION ####
+##############################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+for(inst in c(740,751)){#
+    print(inst)#
+    list <- dir(".", pattern = paste0(inst,"_raw_summary.csv"), recursive=T, full.names=T)#
+#
+    DF <- NULL#
+    for(file in list){#
+        df <- read.csv(file)#
+        beads <- subset(df, i == 'beads')#
+        cultures <- subset(df, i == 'picoeuk')#
+#
+        print(paste("Does rows of beads and cultures match?",unique(cultures$file == beads$file)))#
+        cultures$norm.fsc <- round(cultures$fsc/mean(beads$fsc),2)#
+        cultures$norm.chl <- round(cultures$fsc/mean(beads$chl),2)#
+        DF <- rbind(DF, cultures)#
+    }#
+    time <- as.POSIXct(DF$file, format = "%FT%H-%M-%S", tz = "GMT")#
+    DF[order(time),]#
+    write.csv(DF,file=paste0(path.to.git.repository,"/",inst,"-cultures.csv", sep=""), row.names=FALSE)#
+#
+}#
+#
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
+#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+merge
+poc
+cultures.mean
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("MICRO",2),rep("NAV", 2), rep("PT 632",4), rep("TAPS 1135",2), rep("TAPS 3367",2), rep("TW 3365",2), rep("1314",2), rep("7803",2), rep("AS9601",2), rep("MED4",2),rep("NAT12A",2),rep("WH8102",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl
+merge(poc.mean, cultures.mean, by='Sample.ID')
+poc.mean
+cultures.mean
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep(" Micromonas pusilla",2),rep("Navicula transitans", 2), rep("Phaedactylum tricornutum",4), rep("Thalassiosira pseudonana (1135)",2),#
+                        rep("Thalassiosira pseudonana (3367)",2), rep("TW 3365",2), rep("Prochlorococcus (1314)",2), rep("Synechococcus (7803)",2), #
+                        rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')
+merge
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)#
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically PT632 & LICMO since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+# 2. We also excluded data from EHUX since we collected only one filter, giving us little confidence in POc measurement.#
+merge2 <- subset(merge, Sample.ID !="PT 632" & Sample.ID !="EHUX" & Sample.ID !="LICMO")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+merge
+merge2 <- subset(merge, Sample.ID !="Phaedactylum tricornutum")
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically Phaedactylum tricornutum since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+merge2 <- subset(merge, Sample.ID !="Phaedactylum tricornutum")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
+summary(reg)
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
+#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
+#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+library(viridis)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)
+par(mfrow=c(1,2), pty='s',cex=1.2)#
+#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}
+poc
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
+#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+cultures
+merge <- merge(poc, cultures.mean, by='Sample.ID')
+merge
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))
+merge
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}
+merge2
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep(" Micromonas pusilla",2),rep("Navicula transitans", 2), rep("Phaeodactylum tricornutum",4), rep("Thalassiosira pseudonana (1135)",2),#
+                        rep("Thalassiosira pseudonana (3367)",2), rep("TW 3365",2), rep("Prochlorococcus (1314)",2), rep("Synechococcus (7803)",2),#
+                        rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically Phaedactylum tricornutum since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
 summary(reg)#
 #
-save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
 #
-png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
 #
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+library(scales)#
+library(viridis)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)
+par(mfrow=c(1,2), pty='s',cex=1.2)#
+#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+library(viridis)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+#
+png("Qc-scatter.png",width=12, height=6, unit='in', res=200)#
+par(mfrow=c(1,2), pty='s',cex=1.2)#
+#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}#
 #
 dev.off()
-inst <- "989" #
+merge
+cultures
+poc
+poc <- read.csv("Qc-cultures.csv")
+poc
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep(" Micromonas pusilla",2),rep("Navicula transitans", 2), rep("Phaeodactylum tricornutum",4), rep("Thalassiosira pseudonana (1135)",2),#
+                        rep("Thalassiosira pseudonana (3367)",2), rep("TW 3365",2), rep("Prochlorococcus (1314)",2), rep("Synechococcus (7803)",2),#
+                        rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2))#
 #
-fr <- read.csv(paste0("flow_rate_calibration/",inst,"-streampressure.csv"))#
-zero <- 1.25 #correction for pressure sensor not being zero'ed.#
-fr$fr <- zero*60*(fr$weight - fr$tare)/fr$time #calculate flow rate (ml/min)#
-### linear regression#
-reg <- lm(fr ~ poly(measured.pressure, 1, raw=T), data=log(fr[,c("fr", "measured.pressure")],10))#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)
+merge
+poc.mean
+cultures.mean
+merge(poc.mean, cultures.mean, by='Sample.ID')
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("poc-data.csv")#
+cultures <- read.csv("influx-cultures.csv")#
+cultures$Sample.ID <- c(rep("EHUX",2), rep("LICMO",2), rep("Micromonas pusilla",2),rep("Navicula transitans", 2), rep("Phaeodactylum tricornutum",4), rep("Thalassiosira pseudonana (1135)",2),#
+                        rep("Thalassiosira pseudonana (3367)",2), rep("TW 3365",2), rep("Prochlorococcus (1314)",2), rep("Synechococcus (7803)",2),#
+                        rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2))#
+#
+poc.sd <- aggregate(poc, by=list(poc$Sample.ID), FUN=sd)#
+poc.mean <- aggregate(poc, by=list(poc$Sample.ID), FUN=mean)#
+poc.mean$Sample.ID <- poc.mean$Group.1#
+poc.mean$C..ug.ml.sd <- poc.sd$C..ug.ml.#
+poc.mean$N..ug.ml.sd <- poc.sd$N..ug.ml.#
+#
+cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+cultures.mean$Sample.ID <- cultures.mean$Group.1#
+cultures.mean$abundance_cells.mL.sd <- cultures.sd$abundance_cells.mL#
+cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+#
+### MERGE POC with Cell Abundance#
+merge <- merge(poc.mean, cultures.mean, by='Sample.ID')#
+#
+### Calculate Quotas#
+merge$pgC.cell <- 10^6*(merge$C..ug.ml.)/(merge$abundance_cells.mL) # pgC.cell-1#
+merge$pgN.cell <- 10^6*(merge$N..ug.ml.)/(merge$abundance_cells.mL) # pgN.cell-1#
+merge$pgC.cell.sd <- merge$pgC.cell * sqrt((merge$C..ug.ml.sd/merge$C..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+merge$pgN.cell.sd <- merge$pgN.cell * sqrt((merge$N..ug.ml.sd/merge$N..ug.ml.)^2 + (merge$abundance_cells.mL.sd/merge$abundance_cells.mL)^2)#
+#
+### CELL QUOTAS vs NORM FSC for INFLUX#
+write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Influx-Qc-cultures.csv", row.names=FALSE)#
+#### CELL QUOTAS reference#
+write.csv(merge[,c("Sample.ID","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file="Qc-cultures.csv", row.names=FALSE)
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+.rainbow.cols <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow","#FF7F00", "red", "#7F0000"))#
+#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+merge <- read.csv("Influx-Qc-cultures.csv")#
+mie <- read.csv("INFLUXcalibrated-mie.csv")#
+#
+### WARNING !!! ####
+# 1. For regression purpose, we excluded elongated cell type, specifically Phaedactylum tricornutum since forward scatter is sensitive to the cell width (not cell length), underestimating the true cell size#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum")#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+# linear regression#
+reg <- lm(pgC.cell ~ poly(norm.fsc,1,raw=T) , data=log(merge2[,c("pgC.cell","norm.fsc")],10))#
 summary(reg)#
 #
-save(reg, file=paste0("flow_rate_calibration/lm_",inst))#
+png("Influx-Qc-scatter.png",width=12, height=12, unit='in', res=100)#
 #
-png(paste0("flow_rate_calibration/",inst,"-flowrate.png"),width=12, height=12, unit='in', res=100)#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,20), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste("#",inst))#
+lines(mie$scatter, mie[,paste0('Qc_mid')], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_upr')], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0('Qc_lwr')], col='grey', lwd=2)#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(.rainbow.cols(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based theoritical data", "(index of refraction 1.031 +/- 0.014)"), pch=c(rep(21,nrow(merge2)),NA, NA), lwd=c(rep(NA,nrow(merge2)),2, NA), bty='n',#
+          pt.bg=alpha(.rainbow.cols(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+dev.off()
+############################################
+### 4. MERGE FCM data with POC/PON data ####
+############################################
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+poc <- read.csv("Qc-cultures.csv")#
 #
-par(mfrow=c(1,1), cex=1.4)#
-  plot(fr$measured.pressure , fr$fr, bg=adjustcolor('red3',0.4), pch=21, cex=2, xlab='pressure (psi)', ylab="Flow Rate (ml/min)", log='xy', main=paste("#",inst))#
-  par(new=T)#
-  plot(log10(fr$measured.pressure), log10(fr$fr), yaxt='n',xaxt='n',xlab=NA, ylab=NA,pch=NA, bty='n')#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"fit"], col='red3',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"lwr"], col='grey',lwd=2 )#
-  lines(x=log10(fr$measured.pressure),predict(reg, newdata=data.frame(measured.pressure=log10(fr$measured.pressure)),interval='predict')[,"upr"], col='grey',lwd=2 )#
-  legend("bottomright", legend=bquote(paste("FR=",.(round(10^reg$coefficients[1],3)),"(psi"^{.(round(reg$coefficients[2],3))},")")), bty='n',cex=2)#
-  abline(v=log10(12),col='green')#
-  abline(h=predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict')[,"fit"], col='green')#
-  legend('top',paste(round(10^predict(reg, newdata=data.frame(measured.pressure=log10(12)),interval='predict'),1)), bty='n', text.font=c(1,2,1))#
+for(inst in c(740,751)){#
+#
+    #inst <- 740#
+    cultures <- read.csv(paste0(inst,"-cultures.csv"))#
+#
+    if(inst == 740){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2), rep("Phaedactylum tricornutum",2),rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (AS9601)",2), rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (MED4)",2),rep("Prochlorococcus (NAT12A)",2),rep("Synechococcus (WH8102)",2),rep("Synechococcus (7803)",2))#
+              }#
+    if(inst == 751){ cultures$Sample.ID <- c(rep("Thalassiosira weissflogii",2),rep("Navicula transitans",2), rep("Thalassiosira pseudonana (1135)",2), rep("Thalassiosira pseudonana (3367)",2),rep("Phaedactylum tricornutum",2), rep("Micromonas pusilla",2),#
+                                              rep("Prochlorococcus (MED4)",2), rep("Prochlorococcus (AS9601)",2),rep("Prochlorococcus (1314)",2),rep("Prochlorococcus (NAT12A)",2), rep("Synechococcus (WH8102)",2), rep("Synechococcus (7803)",2))#
+              }#
+#
+    cultures.sd <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=sd)#
+    cultures.mean <- aggregate(cultures, by=list(cultures$Sample.ID), FUN=mean)#
+    cultures.mean$Sample.ID <- cultures.mean$Group.1#
+    cultures.mean$norm.fsc.sd <- cultures.sd$norm.fsc#
+    cultures.mean$norm.chl.sd <- cultures.sd$norm.chl#
+    ### MERGE POC with Cell Abundance#
+    merge <- merge(poc, cultures.mean, by='Sample.ID')#
+#
+    write.csv(merge[,c("Sample.ID","norm.fsc","norm.fsc.sd","norm.chl","norm.chl.sd","abundance_cells.mL","abundance_cells.mL.sd","pgC.cell","pgN.cell","pgC.cell.sd","pgN.cell.sd")],file=paste0(inst,"-Qc-cultures.csv"), row.names=FALSE)#
+#
+}
+#############################
+### 5. LINEAR REGRESSION ####
+#############################
+library(scales)#
+library(viridis)#
+path.to.git.repository <- "~/Documents/DATA/Codes/fsc-poc-calibration"#
+setwd(path.to.git.repository)#
+#
+png("Qc-scatter.png",width=12, height=6, unit='in', res=200)#
+par(mfrow=c(1,2), pty='s',cex=1.2)#
+#
+for(inst in c(740, 751)){#
+#
+merge <- read.csv(paste0(inst,"-Qc-cultures.csv"))#
+merge2 <- subset(merge, Sample.ID !="Phaeodactylum tricornutum") # remove non-spherical cells#
+merge2 <- merge2[order(merge2$norm.fsc),]#
+#
+mie <- read.csv("calibrated-mie.csv")#
+plot(merge2$norm.fsc,merge2$pgC.cell, log='xy', yaxt='n', xaxt='n', pch=NA,xlim=c(0.002,10), ylim=c(0.005,100), ylab=expression(paste("Qc (pgC cell"^{-1},")")), xlab="Normalized scatter (dimensionless)", main=paste(inst))#
+with(merge2, arrows(norm.fsc, pgC.cell - pgC.cell.sd, norm.fsc, pgC.cell + pgC.cell.sd,  code = 3, length=0, col='grey', lwd=2))#
+with(merge2, arrows(norm.fsc-norm.fsc.sd, pgC.cell, norm.fsc+norm.fsc.sd, pgC.cell,  code = 3, length=0,col='grey',lwd=2))#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_mid")], col='red3', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_upr")], col='grey', lwd=2)#
+lines(mie$scatter, mie[,paste0("Qc_",inst,"_lwr")], col='grey', lwd=2)#
+points(merge2$norm.fsc,merge2$pgC.cell,bg=alpha(viridis(nrow(merge2)),0.5),cex=2, pch=21)#
+axis(2, at=c(0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), labels=c(0.005,0.01, 0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100,1000), las=1)#
+axis(1, at=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10),labels=c(0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10))#
+legend("topleft",legend=c(as.vector(merge2$Sample.ID),"Mie-based model (n = 1.031 +/- 0.014)"), cex=0.5,pch=c(rep(21,nrow(merge2)),NA), lwd=c(rep(NA,nrow(merge2)),2), bty='n',#
+          pt.bg=alpha(viridis(nrow(merge2)),0.5), col=c(rep(1,nrow(merge2)),'red3'), text.font=c(rep(3,nrow(merge2)),1))#
+#
+}#
 #
 dev.off()
+library(popcycle)#
+library(dplyr)#
+library(lmodel2)#
+#
+#######################################
+## DOWNLOAD THE RAW DATA using DAT ####
+#######################################
+dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63#
+#
+#Path to the raw data (DAT)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"#
+#########################
+### SEAFLOW ANALYSIS ####
+#########################
+#
+#Path to the Git repository#
+setwd("~/Documents/DATA/Codes/seaflow-virtualcore")
+inst <- 740
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)#
+  if(inst == 740 | inst == 751) list <- list[-14]
+list
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)
+list
+library(popcycle)
+library(popcycle)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"#
+inst <- 740#
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)
+evt0.3 <- readSeaflow(list[2],transform=F)#
+evt0.5 <- readSeaflow(list[3],transform=F)#
+evt0.7 <- readSeaflow(list[4],transform=F)#
+evt1.0 <- readSeaflow(list[5],transform=F)#
+evt1.8 <- readSeaflow(list[13],transform=F)#
+evt3.1 <- readSeaflow(list[6],transform=F)#
+evt5.7 <- readSeaflow(list[7],transform=F)
+plot.cytogram(evt0.3)
+?plot.cytogram
+plot_cytogram(evt0.3)
+evt0.3 <- readSeaflow(list[2],transform=T)#
+plot_cytogram(evt0.3)
+plot_cytogram(evt0.3, para.x='fsc_small', para.y='pe')
+plot.cytogram(evt0.3, para.x='fsc_small', para.y='pe')
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- evt.[evt.$fsc_small > 1, ]#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(aligned[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+id[i]
+i
+id[i]
+id <- c(2:7,13)
+id
+id[i]
+list[id[i]]
+evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- evt.[evt.$fsc_small > 1, ]#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)
+size <- c(0.3,0.5,0.7,1,3.1,5.7,1.8)#
+id <- c(2:7,13)#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- evt[evt$fsc_small > 1, ]#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(aligned[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+size <- c(0.3,0.5,0.7,1,3.1,5.7,1.8)#
+id <- c(2:7,13)#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- evt[evt$fsc_small > 1, ]#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+plot_cytogram(BEADS, para.x='fsc_small', para.y='pe')
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1')
+plot_cytogram(evt., para.x='fsc_small', para.y='D1')
+evt. <- subset(evt., D1 < max(evt.D1) | D2 < max(evt.D2))
+evt. <- subset(evt., D1 < max(evt.$D1) | D2 < max(evt.$D2))
+plot_cytogram(evt., para.x='fsc_small', para.y='D1')
+max(evt.$D1)
+max(evt.$D2)
+evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))
+plot_cytogram(evt., para.x='fsc_small', para.y='D1')
+evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, D1 > 1 | D2 > 1 | fsc_small 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) | D2 < max(evt.$D2))
+evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, D1 > 1 | D2 > 1 | fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) | D2 < max(evt.$D2))
+plot_cytogram(evt., para.x='fsc_small', para.y='D1')
+evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, D1 > 1 & D2 > 1 & fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))
+plot_cytogram(evt., para.x='fsc_small', para.y='D1')
+plot_cytogram(evt., para.x='fsc_small', para.y='pe')
+list
+inst <- 751#
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)
+list
+#############
+## FIGURE ###
+############ #
+library(popcycle)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"#
+inst <- 751#
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)#
+#
+size <- c(0.3,0.5,0.7,1,1.8,3.1,5.7)#
+id <- c(7,8,9,11,10,12,13) #oligo#
+id <- c(15,1,2,3,16,4,5) #coastal#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, D1 > 1 & D2 > 1 & fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+#############
+## FIGURE ###
+############ #
+library(popcycle)#
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"#
+inst <- 751#
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)#
+#
+size <- c(0.3,0.5,0.7,1,1.8,3.1,5.7)#
+id <- c(7,8,9,11,10,12,13) #oligo#
+#id <- c(15,1,2,3,16,4,5) #coastal#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, D1 > 1 & D2 > 1 & fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+size <- c(0.3,0.5,0.7,1,1.8,3.1,5.7)#
+id <- c(7,8,9,11,10,12,13) #oligo#
+id <- c(15,1,2,3,16,4,5) #coastal#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+size <- c(0.3,0.5,0.7,1,1.8,3.1,5.7)#
+id <- c(7,8,9,11,10,12,13) #oligo#
+#id <- c(15,1,2,3,16,4,5) #coastal#
+#
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+plot_cytogram(BEADS, para.x='fsc_small', para.y='pe')
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1')
+?plot_cytogram
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=400)
+BEADS <- NULL#
+for(i in 1:length(id)){#
+  evt <- readSeaflow(list[id[i]],transform=T)#
+  evt. <- subset(evt, fsc_small > 1)#
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))#
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')#
+  poly.beads <- getpoly(quiet=TRUE)#
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))#
+  beads$size <- size[i]#
+  BEADS <- rbind(BEADS, beads)#
+}
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=400)
+plot.cytogram(evt., para.x='fsc_small', para.y='D1')
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=400)
+plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=200)
+b <- read.csv(paste0("1.bead_calibration/",inst,"-summary.csv"))
+b
+plot_cytogram
+p <- plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=200)
+p
+p + geom_point(x=c(10,100,500,750,1000,1200), y=c(3,9,50,70,100,300))
+library(tidyverse)
+p + geom_point(x=c(10,100,500,750,1000,1200), y=c(3,9,50,70,100,300))
+p <- plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=200)
+p + geom_point(x=c(10,100,500,750,1000,1200), y=c(3,9,50,70,100,300))
+p + geom_point(aes(x=c(10,100,500,750,1000,1200), y=c(3,9,50,70,100,300)))
+?geom_point
+write.csv(BEADS, paste0("1.bead_calibration/",inst,"-EVT.csv"), quote=F, row.names=F)

@@ -91,3 +91,36 @@ ALL <- rbind(ALL, all)
 }
 
 write.csv(ALL, paste0("1.bead_calibration/",inst,"-summary.csv"), quote=F, row.names=F)
+
+
+
+
+############
+## FIGURE ##
+############
+library(popcycle)
+library(tidyverse)
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"
+inst <- 751
+list <- list.files(path=paste0(path.to.data,inst,"_caldata"),pattern=".evt$", recursive=T, full.names=T)
+
+size <- c(0.3,0.5,0.7,1,1.8,3.1,5.7)
+id <- c(7,8,9,11,10,12,13) #oligo
+#id <- c(15,1,2,3,16,4,5) #coastal
+
+BEADS <- NULL
+for(i in 1:length(id)){
+  evt <- readSeaflow(list[id[i]],transform=T)
+  evt. <- subset(evt, fsc_small > 1)
+  evt. <- subset(evt., D1 < max(evt.$D1) & D2 < max(evt.$D2))
+  plot.cytogram(evt., para.x='fsc_small', para.y='pe')
+  poly.beads <- getpoly(quiet=TRUE)
+  beads <- subset(evt.,inout(evt.[,c("fsc_small", "pe")],poly=poly.beads, bound=TRUE, quiet=TRUE))
+  beads$size <- size[i]
+  BEADS <- rbind(BEADS, beads)
+}
+
+write.csv(BEADS, paste0("1.bead_calibration/",inst,"-EVT.csv"), quote=F, row.names=F)
+
+p <- plot_cytogram(BEADS, para.x='fsc_small', para.y='D1', bins=200)
+p + geom_point(aes(x=c(10,100,500,750,1000,1200), y=c(3,9,50,70,100,300)))
