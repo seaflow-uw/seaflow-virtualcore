@@ -248,14 +248,14 @@ dev.off()
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore")
 
 png("1.bead_calibration/ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)
-par(mfrow=c(3,2))
+par(mfrow=c(3,2),cex=1.2)
 
 SLOPES <- NULL
 
 for(ins in c(989,751,740)){
 print(ins)
 
-      #ins<- "740"
+      #ins<- "751"
     ALL <- read.csv(paste0("1.bead_calibration/",ins,"-summary.csv"))
       ALL$pmt <- 'coastal'
       id <- which((grepl("oligo", ALL$file))==T)
@@ -279,7 +279,7 @@ print(ins)
        }
 
     DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), D1=c(df.o$d1.med,df.c$d1.med+comp.d1),D2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
-    DF <- DF[order(DF$fsc),]
+    DF <- DF[order(DF$size),]
 
 
     slope <- NULL
@@ -304,14 +304,20 @@ print(ins)
 
 
       for(param in c("D1","D2")){
-        col <- c("red3",rep('grey',2),"seagreen3",rep('grey',2))
-        plot(DF$fsc, DF[,param], xlim=c(0,62000), ylim=c(0,62000),main=paste(ins), ylab=paste(param), xlab="FSC",cex=1.4)
+        col <- c("red3",rep('grey',2),"red3",rep('grey',2))
+        plot(0,0,pch=NA, xlim=c(0,62000), ylim=c(0,62000),main=paste(ins), ylab=paste(param), xlab="FSC")
+
           s <- grep(param, colnames(slope))
             c <- 1
             for(i in s[seq(1,length(s),by=2)]){
                 abline(b=slope[,i],a=slope[,i+1], lwd=2, col=col[c])
                 c <- c+1}
+
+                points(DF$fsc, DF[,param], pch=21, bg=rep(alpha(viridis(7),0.5),each=2), cex=2)
+                legend("topleft",legend=paste(unique(DF$size), "µm beads"), cex=1, pch=21, bty='n',pt.bg=alpha(viridis(7),0.5))
+
               }
+
 
   slope <- data.frame(cbind(ins=ins, slope))
   SLOPES <- rbind(SLOPES, slope)
@@ -321,3 +327,4 @@ print(ins)
 dev.off()
 
 write.csv(SLOPES, "1.bead_calibration/seaflow_filter_slopes.csv", quote=F, row.names=F)
+write.csv(DF, paste0("1.bead_calibration/",inst,"-beadscoordinates.csv"), quote=F, row.names=F)
