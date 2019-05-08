@@ -603,4 +603,4 @@ p2 <- df %>%
     annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
     theme_bw()
 p2
-ggsave("SeaFlowInflux-correlation.png", width=7, height=6, unit='in', dpi=600)
+ggsave("SeaFlowInflux-correlation.png", width=5, height=4, unit='in', dpi=300)
