@@ -539,6 +539,7 @@ plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", yl
 ###################
 library(tidyverse)
 library(viridis)
+library(ggpubr)
 s <- best.vc.method
 
 df1 <- subset(DF, corr== best.offset)
@@ -581,18 +582,19 @@ ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=
 
 
 
-
-
 s <- subset(data, instrument == "SeaFlow")$abundance
 i <- subset(data, instrument == "Influx")$abundance
 population <- subset(data, instrument == "Influx")$population
 df <- tibble(s,i, population)
 
-r <- round(cor(i,s,use='pairwise.complete.obs',  method= 'pearson'),2)
+# filter out outliers using Chauvenet's criterion
+df$error <- log10(df$i/df$s)
 
-p2 <- df %>%
+r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
+
+p1 <- df %>%
     ggplot(aes(x=s, y=i)) +
-    geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=3) +
+    geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
     geom_abline(intercept=0, coeff=1, col=1, lwd=0.5, lty=2) +
     geom_smooth(method='glm',col='red3',lwd=0.5) +
     scale_y_continuous(trans= 'log10') +
@@ -602,5 +604,15 @@ p2 <- df %>%
     annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
     annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
     theme_bw()
-p2
-ggsave("SeaFlowInflux-correlation.png", width=5, height=4, unit='in', dpi=300)
+
+p2 <- df %>%
+    ggplot(aes(x=error)) +geom_histogram(aes(x=error, fill=population), bins=50, color='black', alpha=0.75, size=0.25) +
+    scale_fill_manual(values=group.colors) +
+    labs(x=expression(paste("Log difference")), y=expression(paste("Frequency"))) +
+    theme_bw()
+
+ggarrange(p1, p2, legend='none',
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+
+ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
