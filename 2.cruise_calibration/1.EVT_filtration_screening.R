@@ -68,11 +68,9 @@ for (file in list){
 
   # Filtering noise
   evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]
-  # Filtering out saturating particles
-  evt.. <- evt.[evt.$D1 < max(evt.$D1) | evt.$D2 < max(evt.$D2), ]
 
-  # Fltering aligned particles (D1 = D2)
-  aligned <- subset(evt.., D2 < D1 + width & D1 < D2 + width)
+  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2
+  aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)
 
     if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)
       } else aligned. <- aligned
@@ -239,10 +237,6 @@ write.csv(ALL, paste0(cruise,"data/seaflow-summary.csv"), quote=F, row.names=F)
 library(lattice)
 library(lmodel2)
 library(popcycle)
-beads.coord <- read.csv("https://raw.githubusercontent.com/armbrustlab/seaflow-filter/master/ALL-filterparams.csv")
-
-#Path to the raw data (DAT)
-path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
 
@@ -540,86 +534,85 @@ plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", yl
 
 
 
+###################
+### 6. PLOTTING ###
+###################
+library(tidyverse)
+library(viridis)
+library(ggpubr)
+s <- best.vc.method
 
-  ###################
-  ### 6. PLOTTING ###
-  ###################
-  library(tidyverse)
-  library(viridis)
-  library(ggpubr)
-  s <- best.vc.method
+df1 <- subset(DF, corr== best.offset)
 
-  df1 <- subset(DF, corr== best.offset)
+df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
+  df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
+  df2$cruise <- df2b$cruise
+df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
+  df3$cruise <- df2b$cruise
 
-  df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
-    df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
-    df2$cruise <- df2b$cruise
-  df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
-    df3$cruise <- df2b$cruise
+data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 6)),
+                  time=as.POSIXct(rep(df2$time,6)),
+                  population=rep(c("prochloro","synecho","picoeuk"), each=nrow(df2)*2),
+                  instrument=rep(c("SeaFlow","Influx"),nrow(df2)*3),
+                  abundance=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("pro.influx")],
+                              df2[,paste0("syn.seaflow.each",s)], df2[,paste0("syn.influx")],
+                              df2[,paste0("pico.seaflow.median",s)], df2[,paste0("pico.influx")])
+                              )
 
-  data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 6)),
-                    time=as.POSIXct(rep(df2$time,6)),
-                    population=rep(c("prochloro","synecho","picoeuk"), each=nrow(df2)*2),
-                    instrument=rep(c("SeaFlow","Influx"),nrow(df2)*3),
-                    abundance=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("pro.influx")],
-                                df2[,paste0("syn.seaflow.each",s)], df2[,paste0("syn.influx")],
-                                df2[,paste0("pico.seaflow.median",s)], df2[,paste0("pico.influx")])
-                                )
+#remove SeaFlow pico data for Thompson_9
+data[which(data$population == 'picoeuk' & data$cruise == 'Thompson_9'), 'abundance'] <- NA
 
-  #remove SeaFlow pico data for Thompson_9
-  data[which(data$population == 'picoeuk' & data$cruise == 'Thompson_9'), 'abundance'] <- NA
-
-  group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
-
-
-  levels(data$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
+group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
 
 
-  p <- data %>%
-        ggplot() +
-        geom_point(aes(x=time, y=abundance,fill=population, size=instrument), pch=21, alpha=0.5, show.legend=T) +
-        facet_wrap( ~ cruise, scales='free_x') +
-        scale_y_continuous(trans= 'log10') +
-        scale_fill_manual(values=group.colors) +
-        labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
-        theme_bw()
-  p
-
-  ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=500)
+levels(data$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
 
 
-
-  s <- subset(data, instrument == "SeaFlow")$abundance
-  i <- subset(data, instrument == "Influx")$abundance
-  population <- subset(data, instrument == "Influx")$population
-  df <- tibble(s,i, population)
-
-  # filter out outliers using Chauvenet's criterion
-  df$error <- log10(df$i/df$s)
-
-  r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
-
-  p1 <- df %>%
-      ggplot(aes(x=s, y=i)) +
-      geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
-      geom_abline(intercept=0, coeff=1, col=1, lwd=0.5, lty=2) +
-      geom_smooth(method='glm',col='red3',lwd=0.5) +
+p <- data %>%
+      ggplot() +
+      geom_point(aes(x=time, y=abundance,fill=population, size=instrument), pch=21, alpha=0.5, show.legend=T) +
+      facet_wrap( ~ cruise, scales='free_x') +
       scale_y_continuous(trans= 'log10') +
-      scale_x_continuous(trans= 'log10') +
       scale_fill_manual(values=group.colors) +
-      labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
-      annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
-      annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
+      labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
       theme_bw()
+p
 
-  p2 <- df %>%
-      ggplot(aes(x=error)) +geom_histogram(aes(x=error, fill=population), bins=50, color='black', alpha=0.75, size=0.25) +
-      scale_fill_manual(values=group.colors) +
-      labs(x=expression(paste("Log difference")), y=expression(paste("Frequency"))) +
-      theme_bw()
+ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=500)
 
-  ggarrange(p1, p2, legend='none',
-            labels = c("A", "B"),
-            ncol = 2, nrow = 1)
 
-  ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
+
+s <- subset(data, instrument == "SeaFlow")$abundance
+i <- subset(data, instrument == "Influx")$abundance
+population <- subset(data, instrument == "Influx")$population
+df <- tibble(s,i, population)
+
+# filter out outliers using Chauvenet's criterion
+df$error <- log10(df$i/df$s)
+
+r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
+
+p1 <- df %>%
+    ggplot(aes(x=s, y=i)) +
+    geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
+    geom_abline(intercept=0, coeff=1, col=1, lwd=0.5, lty=2) +
+    geom_smooth(method='glm',col='red3',lwd=0.5) +
+    scale_y_continuous(trans= 'log10') +
+    scale_x_continuous(trans= 'log10') +
+    scale_fill_manual(values=group.colors) +
+    labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
+    annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
+    annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
+    theme_bw()
+
+p2 <- df %>%
+    ggplot(aes(x=error)) +geom_histogram(aes(x=error, fill=population), bins=50, color='black', alpha=0.75, size=0.25) +
+    scale_fill_manual(values=group.colors) +
+    labs(x=expression(paste("Log difference")), y=expression(paste("Frequency"))) +
+    theme_bw()
+
+ggarrange(p1, p2, legend='none',
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+
+ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
