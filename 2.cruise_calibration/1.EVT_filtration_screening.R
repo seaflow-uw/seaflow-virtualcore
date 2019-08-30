@@ -550,8 +550,6 @@ df1 <- subset(DF, corr== best.offset)
 df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
   df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
   df2$cruise <- df2b$cruise
-df3 <- aggregate(df1, by=list(df1$time), FUN=function(x) sd(x, na.rm=T))
-  df3$cruise <- df2b$cruise
 
 data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 6)),
                   time=as.POSIXct(rep(df2$time,6)),
@@ -590,8 +588,12 @@ i <- subset(data, instrument == "Influx")$abundance
 population <- subset(data, instrument == "Influx")$population
 df <- tibble(s,i, population)
 
-# filter out outliers using Chauvenet's criterion
-df$error <- log10(df$i/df$s)
+# calcualte percent difference
+df$error <- 100*2*(df$i-df$s)/(df$i+df$s)
+hist(df$error, breaks=c(-200,-100,-50,-25,0,25,50,100,200))
+
+length(which(abs(df$error) < 50))/nrow(df)
+length(which(abs(df$error) > 100))/nrow(df)
 
 r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
 
@@ -609,13 +611,15 @@ p1 <- df %>%
     theme_bw()
 
 p2 <- df %>%
-    ggplot(aes(x=error)) +geom_histogram(aes(x=error, fill=population), bins=50, color='black', alpha=0.75, size=0.25) +
+    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=10, color='black', alpha=0.75, size=0.25) +
     scale_fill_manual(values=group.colors) +
-    labs(x=expression(paste("Log difference")), y=expression(paste("Frequency"))) +
+    geom_vline(xintercept=25, lwd=0.5, lty=2) +
+    geom_vline(xintercept=-25, lwd=0.5, lty=2) +
+    labs(x=expression(paste("% Discrepancy")), y=expression(paste("Count"))) +
     theme_bw()
 
 ggarrange(p1, p2, legend='none',
-          labels = c("A", "B"),
+          labels = c("a", "b"),
           ncol = 2, nrow = 1)
 
 ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
