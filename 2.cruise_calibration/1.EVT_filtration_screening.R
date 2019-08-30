@@ -69,6 +69,9 @@ for (file in list){
   # Filtering noise
   evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]
 
+  # Filtering out particles with saturated D1 and D2 signals
+  evt. <- evt.[evt.$D1 > max(evt.$D1) | evt.$D2 > max(evt.$D2), ]
+
   # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2
   aligned <- subset(evt., D2 < D1 + width & D1 < D2 + width)
 
