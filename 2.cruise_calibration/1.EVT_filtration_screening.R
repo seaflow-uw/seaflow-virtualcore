@@ -432,6 +432,15 @@ write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
 
 
 
+
+
+
+
+
+
+
+
+
 ############################################
 ### 3. file-based VC or cruise-based VC  ###
 ############################################
@@ -587,39 +596,40 @@ s <- subset(data, instrument == "SeaFlow")$abundance
 i <- subset(data, instrument == "Influx")$abundance
 population <- subset(data, instrument == "Influx")$population
 df <- tibble(s,i, population)
+df$population <- factor(df$population, levels = names(group.colors))
 
-# calcualte percent difference
-df$error <- 100*2*(df$i-df$s)/(df$i+df$s)
-hist(df$error, breaks=c(-200,-100,-50,-25,0,25,50,100,200))
+# calculate Percentage difference
+# df$error <- 2*(df$i - df$s)/(df$i + df$s)
 
-length(which(abs(df$error) < 50))/nrow(df)
-length(which(abs(df$error) > 100))/nrow(df)
+# calculate Fold difference
+df$error <- log10(df$i/df$s)
+fold <- c(2,10)
+print(paste(round(length(which(abs(df$error) < log10(fold[1])))/nrow(df),2), "% of estimates have less than ",fold[1],"fold difference"))
+print(paste(round(length(which(abs(df$error) > log10(fold[2])))/nrow(df),2), "% of estimates have more than ",fold[2],"fold difference"))
 
 r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
 
 p1 <- df %>%
     ggplot(aes(x=s, y=i)) +
     geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
-    geom_abline(intercept=0, coeff=1, col=1, lwd=0.5, lty=2) +
+    geom_abline(intercept=0, col=1, lwd=0.5, lty=2) +
     geom_smooth(method='glm',col='red3',lwd=0.5) +
     scale_y_continuous(trans= 'log10') +
     scale_x_continuous(trans= 'log10') +
-    scale_fill_manual(values=group.colors) +
+    scale_fill_manual(values=group.colors, guide=F) +
     labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
     annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
     annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
     theme_bw()
 
 p2 <- df %>%
-    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=10, color='black', alpha=0.75, size=0.25) +
+    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=0.1, color='black', alpha=0.75, size=0.25) +
     scale_fill_manual(values=group.colors) +
-    geom_vline(xintercept=25, lwd=0.5, lty=2) +
-    geom_vline(xintercept=-25, lwd=0.5, lty=2) +
-    labs(x=expression(paste("% Discrepancy")), y=expression(paste("Count"))) +
+    geom_vline(xintercept=0.25, lwd=0.5, lty=2) +
+    geom_vline(xintercept=-0.25, lwd=0.5, lty=2) +
+    labs(x=expression(paste("Log difference")), y=expression(paste("Count"))) +
     theme_bw()
 
-ggarrange(p1, p2, legend='none',
-          labels = c("a", "b"),
-          ncol = 2, nrow = 1)
+ggarrange(p1, p2, labels = c("a", "b"), ncol = 2, nrow = 1)
 
 ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
