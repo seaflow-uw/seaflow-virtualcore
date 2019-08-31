@@ -601,7 +601,7 @@ df$population <- factor(df$population, levels = names(group.colors))
 # calculate Percentage difference
 # df$error <- 2*(df$i - df$s)/(df$i + df$s)
 
-# calculate Fold difference
+# calculate Log difference
 df$error <- log10(df$i/df$s)
 fold <- c(2,10)
 print(paste(round(length(which(abs(df$error) < log10(fold[1])))/nrow(df),2), "% of estimates have less than ",fold[1],"fold difference"))
@@ -625,8 +625,8 @@ p1 <- df %>%
 p2 <- df %>%
     ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=0.1, color='black', alpha=0.75, size=0.25) +
     scale_fill_manual(values=group.colors) +
-    geom_vline(xintercept=0.25, lwd=0.5, lty=2) +
-    geom_vline(xintercept=-0.25, lwd=0.5, lty=2) +
+    geom_vline(xintercept=log10(2), lwd=0.5, lty=2) +
+    geom_vline(xintercept=-log10(2), lwd=0.5, lty=2) +
     labs(x=expression(paste("Log difference")), y=expression(paste("Count"))) +
     theme_bw()
 
