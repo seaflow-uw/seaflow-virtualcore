@@ -588,7 +588,7 @@ p <- data %>%
       theme_bw()
 p
 
-ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9, unit='in', dpi=500)
+ggsave("SeaFlowInflux-CRUISEcomparison.pdf", width=12, height=9)
 
 
 
@@ -632,4 +632,4 @@ p2 <- df %>%
 
 ggarrange(p1, p2, labels = c("a", "b"), ncol = 2, nrow = 1)
 
-ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4, unit='in', dpi=300)
+ggsave("SeaFlowInflux-correlation-v2.pdf", width=8, height=4)
