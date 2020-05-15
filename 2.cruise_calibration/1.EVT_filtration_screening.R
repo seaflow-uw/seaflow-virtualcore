@@ -3,13 +3,14 @@ library(dplyr)
 library(splancs)
 library(scales)
 
-  #######################################
+#########################################
 ## 0. DOWNLOAD THE RAW DATA using DAT ###
 #########################################
 # dat://fa2bb5981465ff583e091071f2f2c5e5f1b118c5219971a2dde107e4dec25e63
 
 #Path to the raw data (DAT)
 path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/seaflow-virtualcore-data/"
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/"
 
 
 
@@ -34,58 +35,57 @@ for(cruise in allcruises){
 
   print(cruise)
   ### Get EVT list
-  if(cruise == "SCOPE_6" | cruise == "SCOPE_16" | cruise == "SCOPE_2") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)
-  if(cruise == "DeepDOM"| cruise == "MBARI_1" | cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)
-  if(cruise == "Thompson_9") list <- list.files(paste0(path.to.data,cruise,"data"), ".evt",full.names=T, recursive=T)
-  if(cruise == "SCOPE_2" | cruise == "MGL1704" | cruise == "HOT") list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)
+  if(cruise == "SCOPE_6" | cruise == "SCOPE_16" | cruise == "SCOPE_2"){
+    list <- list.files(paste0(path.to.data,cruise,"data"), "00-00$",full.names=T, recursive=T)}
+  if(cruise == "DeepDOM"| cruise == "MBARI_1" | cruise == "Thompson_9"){
+    list <- list.files(paste0(path.to.data,cruise,"data"), ".evt$",full.names=T, recursive=T)}
+  if(cruise == "Thompson_9"){
+    list <- list.files(paste0(path.to.data,cruise,"data"), ".evt",full.names=T, recursive=T)}
+  if(cruise == "SCOPE_2" | cruise == "MGL1704" | cruise == "HOT"){
+    list <- list.files(paste0(path.to.data,cruise,"data"), "00-00.gz",full.names=T, recursive=T)}
 
-
-  inst <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"instrument"])
-
+  ### get Filtration parameters 
   # SLOPES
   slopes <- read.csv("seaflow_filter_slopes.csv")
-
   # BEADS
   if(cruise != "HOT"){
     beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.fsc.small"])
     beads.d1 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D1"])
     beads.d2 <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"beads.D2"])
+    # get instrument serial number
+    inst <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"instrument"])
   }
 
-width <- 5000
-ALL <- NULL
+  # Alignment width
+  width <- 5000
 
-
-for (file in list){
-  # BEADS
-
-
-
+  ALL <- NULL
+  for (file in list){
   #file <- list[2]
   print(file)
 
   evt <- readSeaflow(file,transform=F)
 
-  # Filtering noise
+  # 1. Filtering noise
   evt. <- evt[evt$fsc_small > 1 | evt$D1 > 1 | evt$D2 > 1, ]
 
-  # Filtering out particles with saturated D1 and D2 signals
-  evt.. <- evt.[evt.$D1 > max(evt.$D1) | evt.$D2 > max(evt.$D2), ]
+  # 2. Filtering out particles with saturated D1 and D2 signals
+  evt.. <- evt.[evt.$D1 < max(evt.$D1) | evt.$D2 < max(evt.$D2), ]
 
-  # Fltering aligned particles (D1 = D2), with Correction for the difference of sensitivity between D1 and D2
+  # 3. Fltering aligned particles (D1 = D2)
   aligned <- subset(evt.., D2 < D1 + width & D1 < D2 + width)
 
-    if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)
-      } else aligned. <- aligned
-
+    # if(nrow(aligned)> 100000){aligned. <- sample_n(aligned, 100000)
+    #   } else aligned. <- aligned
     # if(nrow(evt.)> 100000){df <- sample_n(evt., 100000)
     #   } else df <- evt.
     # par(mfrow=c(2,2))
-    # plot_cyt(df, "D1", "D2"); abline(b=notch, a=origin)
-    # plot_cyt(aligned., "D1", "D2"); abline(b=1, a=origin)
-    # plot_cyt(df, "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)
-    # plot_cyt(df, "fsc_small", "pe"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
-
+    # plot_cyt(df, "D1", "D2")
+    # plot_cyt(aligned., "D1", "D2")
+    # plot_cyt(df, "fsc_small", "D1")
+    # plot_cyt(df, "fsc_small", "pe")
+    
+    
     if(cruise == "HOT"){
       c <- basename(dirname(dirname(file)))
         beads.fsc <- as.numeric(beads.coord[which(beads.coord$cruise == c & beads.coord$quantile == 50),"beads.fsc.small"])
@@ -95,52 +95,51 @@ for (file in list){
 
       }
 
-
-    screening <- c(0,2500,5000,7500,10000, 1, 2, 3, 4)
-
+  # 4. Filtering focused particles (D/FSC)  
+  screening <- c(0, 2500, 5000, 7500, 10000, 1, 2, 3, 4)
   for(corr in screening){
 
-  print(paste("corr=", corr))
-  notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']
-  notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']
-  notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']
-  notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']
-  offset.small.D1 <- round(beads.d1 - notch.small.D1 * beads.fsc) + corr
-  offset.small.D2 <- round(beads.d2 - notch.small.D2 * beads.fsc) + corr
-  offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + corr
-  offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + corr
-
-
+    print(paste("corr=", corr))
+    notch.small.D1 <- slopes[slopes$ins== inst,'notch.small.D1']
+    notch.small.D2 <- slopes[slopes$ins== inst,'notch.small.D2']
+    notch.large.D1 <- slopes[slopes$ins== inst,'notch.large.D1']
+    notch.large.D2 <- slopes[slopes$ins== inst,'notch.large.D2']
+    offset.small.D1 <- round(beads.d1 - notch.small.D1 * beads.fsc) + corr
+    offset.small.D2 <- round(beads.d2 - notch.small.D2 * beads.fsc) + corr
+    offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + corr
+    offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + corr
+    
     if(corr == 1){
       offset.small.D1 <- 0
       offset.small.D2 <- 0
-      }
-
+    }
+    
     if(corr == 2){
       offset.small.D1 <- 0
       offset.small.D2 <- 0
       notch.small.D1 <- beads.d1/beads.fsc
       notch.small.D2 <- beads.d2/beads.fsc
-      }
-
+    }
+    
     if(corr == 3){
-        offset.small.D1 <- 0
-        offset.small.D2 <- 0
-        notch.small.D1 <- (beads.d1+width/2)/beads.fsc
-        notch.small.D2 <- (beads.d1+width/2)/beads.fsc
-        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + width/2
-        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + width/2
-        }
-
+      offset.small.D1 <- 0
+      offset.small.D2 <- 0
+      notch.small.D1 <- (beads.d1+width/2)/beads.fsc
+      notch.small.D2 <- (beads.d1+width/2)/beads.fsc
+      offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) + width/2
+      offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) + width/2
+    }
+    
     if(corr == 4){
-        offset.small.D1 <- 0
-        offset.small.D2 <- 0
-        notch.small.D1 <- (beads.d1-width/2)/beads.fsc
-        notch.small.D2 <- (beads.d2-width/2)/beads.fsc
-        offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) - width/2
-        offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) - width/2
-        }
-
+      offset.small.D1 <- 0
+      offset.small.D2 <- 0
+      notch.small.D1 <- (beads.d1-width/2)/beads.fsc
+      notch.small.D2 <- (beads.d2-width/2)/beads.fsc
+      offset.large.D1 <- round(beads.d1 - notch.large.D1 * beads.fsc) - width/2
+      offset.large.D2 <- round(beads.d2 - notch.large.D2 * beads.fsc) - width/2
+    }
+    
+    # subset focused particles
     opp <- subset(aligned, D1 <= fsc_small*notch.small.D1 + offset.small.D1 & D2 <= fsc_small*notch.small.D2 + offset.small.D2 |
         D1  <= fsc_small*notch.large.D1 + offset.large.D1 & D2 <= fsc_small*notch.large.D2 + offset.large.D2)
 
@@ -184,7 +183,7 @@ for (file in list){
 
 
 
-    if(corr == 0 | corr == 2 | corr == 3 | corr == 4){
+    if(corr == 0 | corr == 1 | corr == 2 | corr == 3){
           png(paste0(cruise,"data/", basename(file),"-offset",corr,".png"),width=9, height=12, unit='in', res=100)
 
           if(nrow(opp)> 100000){opp. <- sample_n(opp, 100000)
@@ -192,8 +191,8 @@ for (file in list){
           par(mfrow=c(2,2))
           plot_cyt(aligned. ,  "fsc_small", "D1"); abline(b=notch.small.D1, a=offset.small.D1,col=2); abline(b=notch.large.D1, a=offset.large.D1,col=3); points(beads.fsc, beads.d1,pch=16, col=3)
           plot_cyt(aligned. , "fsc_small", "D2"); abline(b=notch.small.D2, a=offset.small.D2,col=2); abline(b=notch.large.D2, a=offset.large.D2,col=3); points(beads.fsc, beads.d2,pch=16, col=3)
-          plot(opp.[, c("fsc_small", "pe")], cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
-          plot(opp.[, c("fsc_small", "chl_small")], cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
+          plot(opp.[, c("fsc_small", "pe")], xlim=c(0,66000), ylim=c(0,66000), cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
+          plot(opp.[, c("fsc_small", "chl_small")], xlim=c(0,66000), ylim=c(0,66000), cex = 1, pch = 16, col = alpha(as.numeric(as.factor(opp.$pop)), 0.4))
           dev.off()
       }
 
@@ -370,13 +369,13 @@ if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704' | cruise =
 
 
   ############### TEST different VC method ###################################
-  corr <- 1
-  if(cruise == "Thompson_9") corr <- 0.14 # correction factor due to troncated D1 / D2 (based on Seaflow_uncorrected abundance / influx)
+  correction <- 1
+  if(cruise == "Thompson_9") correction <- 0.14 # correction factor due to troncated D1 / D2 (based on Seaflow_uncorrected abundance / influx)
 
-  ALL$vc1 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
-  ALL$vc2 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
-  ALL$vc3 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
-  ALL$vc4 <- corr * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
+  ALL$vc1 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
+  ALL$vc2 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
+  ALL$vc3 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
+  ALL$vc4 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
 
 
 
@@ -441,171 +440,176 @@ write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
 
 
 
-############################################
-### 3. file-based VC or cruise-based VC  ###
-############################################
-library(scales)
-library(plotrix)
+###########################################
+### 3. file-based VC vs cruise-based VC ###
+###########################################
+library(tidyverse)
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
-DF <- read.csv("SeaflowInflux_comparison.csv")
-DF$time <- as.POSIXct(DF$time, tz='GMT')
+DF <- read_csv("SeaflowInflux_comparison.csv")
+DF$corr <- factor(as.character(DF$corr), levels=c("0","2500","5000","7500","10000","1","2","3","4"))
+  
+# split by method
+pos <- "stack"
+pos <- "identity"
 
-# add a color for each cruise
-i <- 1
-for(cruise in unique(DF$cruise)){
-    DF[which(DF$cruise == cruise),'col.cruise'] <- i
-    i <- i + 1
-  }
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pro.influx - pro.seaflow.each4)/pro.influx)) +
+  geom_histogram(position=pos, alpha=0.5, fill="red3") +
+  geom_histogram(aes((pro.influx - pro.seaflow.median4)/pro.influx), position=pos, alpha=0.5) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr) 
 
-    t <- 0.6
-    s <- 2
-   df <- subset(DF, corr==2)
-   par(mfrow=c(3,2), pty='s',cex=1)
-   plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
-   plot(df[,"pro.influx"], df[,paste0("pro.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,900), ylim=c(0,900)); abline(b=1, a=0, lty=2)
-   plot(df[,"syn.influx"], df[,paste0("syn.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t), las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
-   plot(df[,"syn.influx"], df[,paste0("syn.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,250), ylim=c(0,250)); abline(b=1, a=0, lty=2)
-   plot(df[,"pico.influx"], df[,paste0("pico.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t), las=1, xlim=c(0,100), ylim=c(0,100)); abline(b=1, a=0, lty=2)
-   plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,100), ylim=c(0,100)); abline(b=1, a=0, lty=2)
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((syn.influx - syn.seaflow.each4)/syn.influx)) +
+  geom_histogram(position=pos, alpha=0.5, fill='red3') +
+  geom_histogram(aes((syn.influx - syn.seaflow.median4)/syn.influx), position=pos, alpha=0.5) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr)
 
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pico.influx - pico.seaflow.each4)/pico.influx)) +
+  geom_histogram(position=pos, alpha=0.5, fill='red3') +
+  geom_histogram(aes((pico.influx - pico.seaflow.median4)/pico.influx), position=pos, alpha=0.5) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr)
 
+##############################
+### 5. BEST VC calculation ###
+##############################
+# n.opp = total opp n.opp. = fsc_small > 2000; n.evt = total evt; n.evt. = D1 > 1 | D2 > 1 | fsc > 1
+# n.opp/n.evt' #  v1   raw count 
+# n.opp/n.evt. # v2  wo electrical noise
+# n.opp./n.evt # v3  wo small particles
+# n.opp./n.evt. # v4 wo small particles nor electrical noise
 
+# split by method
+w <- 0.1
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pro.influx - pro.seaflow.each1)/pro.influx)) +
+  geom_histogram(binwidth=w, alpha=0.35, fill=1) +
+  geom_histogram(aes((pro.influx - pro.seaflow.each2)/pro.influx), binwidth=w, alpha=0.35, fill=2) +
+  geom_histogram(aes((pro.influx - pro.seaflow.each3)/pro.influx), binwidth=w, alpha=0.35, fill=3) +
+  geom_histogram(aes((pro.influx - pro.seaflow.each4)/pro.influx), binwidth=w, alpha=0.35, fill=4) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr) 
+print(paste0("best VC method: vc", 2))  
+ 
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((syn.influx - syn.seaflow.each1)/syn.influx)) +
+  geom_histogram(binwidth=w, alpha=0.35, fill=1) +
+  geom_histogram(aes((syn.influx - syn.seaflow.each2)/syn.influx), binwidth=w, alpha=0.35, fill=2) +
+  geom_histogram(aes((syn.influx - syn.seaflow.each3)/syn.influx), binwidth=w, alpha=0.35, fill=3) +
+  geom_histogram(aes((syn.influx - syn.seaflow.each4)/syn.influx), binwidth=w, alpha=0.35, fill=4) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr) 
+print(paste0("best VC method: vc", 2, " > ", 4))  
 
-
-
-
-##################
-### 4. BEST VC ###
-##################
-DF.a <- aggregate(DF, by=list(DF$cruise, DF$corr), mean)
-DF.a$cruise <- DF.a$Group.1
-
-
-VC <- NULL
-par(mfrow=c(5,3),cex=1.2, pty='m')
-for(c in unique(DF$cruise)){
-  print(c)
-    df <- subset(DF.a, cruise == c)
-    for (phyto in c('pro','syn','pico')){
-      #  plot(df$corr, rep(0, nrow(df)), pch=NA ,ylim=c(0,2),xlab='offset',ylab='Diff',main=paste(phyto, c))
-      for(s in 1:4){
-        # points(df$corr, df[,paste0(phyto, ".diff.each",s)],col=s)
-        # points(df$corr, df[,paste0(phyto, ".diff.median",s)],col=s,pch=3)
-        each <- mean(df[,paste0(phyto, ".diff.each",s)])
-        median <- mean(df[,paste0(phyto, ".diff.median",s)])
-        vc <- data.frame(cbind(each, median))
-        vc$cruise <- c
-        vc$phyto <- phyto
-        vc$vc.method <- s
-        VC <- rbind(VC, vc)
-        }
-    }
-  }
-
-
-   met <- aggregate(VC, by=list(VC$vc.method, VC$phyto), FUN=function(x) mean(x, na.rm=T))
-   met <- aggregate(VC, by=list(VC$vc.method), FUN=function(x) mean(x, na.rm=T))
-   best.vc.method <- unique(c(met[which(met$each == min(met$each)), "vc.method"], met[which(met$median == min(met$median)), "vc.method"]))
-   print(paste("best VC method is:",best.vc.method))
-
-
-
-######################
-### 5. BEST OFFSET ###
-######################
-s <- best.vc.method
-REG <- NULL
-for(offset in unique(DF$corr)){
-  df <- subset(DF, corr==offset)
-  reg.pro <- lm(df[,paste0("pro.seaflow.each",s)] ~ pro.influx, data=df)
-  reg.syn <- lm(df[,paste0("syn.seaflow.median",s)] ~ syn.influx, data=df)
-  reg.pico <- lm(df[,paste0("pico.seaflow.median",s)] ~ pico.influx, data=df)
-  reg <- data.frame(cbind(offset, reg.pro=reg.pro$coefficient[2], reg.syn=reg.syn$coefficient[2], reg.pico=reg.pico$coefficient[2]))
-  REG <- rbind(REG, reg)
-}
-REG$reg.all <- rowMeans(abs(REG[,c("reg.pro", "reg.syn", "reg.pico")]-1))
-best.offset <- REG[which(REG$reg.all == min(REG$reg.all)),'offset']
-print(paste("best OFFET is:",best.offset))
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pico.influx - pico.seaflow.median1)/pico.influx)) +
+  geom_histogram(binwidth=w, alpha=0.35, fill=1) +
+  geom_histogram(aes((pico.influx - pico.seaflow.median2)/pico.influx), binwidth=w, alpha=0.35, fill=2) +
+  geom_histogram(aes((pico.influx - pico.seaflow.median3)/pico.influx), binwidth=w, alpha=0.35, fill=3) +
+  geom_histogram(aes((pico.influx - pico.seaflow.median4)/pico.influx), binwidth=w, alpha=0.35, fill=4) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr) 
+print(paste0("best VC method: vc", 2, " > ", 4))  
 
 
-df <- subset(DF, corr==0)
-df2 <- subset(DF, corr==1)
-df3 <- subset(DF, corr==4)
-par(mfrow=c(3,3), pty='s',cex=1.2)
-plot(df[,"pro.influx"], df[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(1,500), ylim=c(1,500)); abline(b=1, a=0, lty=2)
-  plot(df2[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,500), ylim=c(0,500)); abline(b=1, a=0, lty=2)
-  plot(df3[,"pro.influx"], df2[,paste0("pro.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('grey',t), las=1, xlim=c(0,500), ylim=c(0,500)); abline(b=1, a=0, lty=2)
-plot(df[,"syn.influx"], df[,paste0("syn.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
-  plot(df2[,"syn.influx"], df2[,paste0("syn.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
-  plot(df3[,"syn.influx"], df3[,paste0("syn.seaflow.each",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('orange',t),las=1, xlim=c(0,200), ylim=c(0,200)); abline(b=1, a=0, lty=2)
-plot(df[,"pico.influx"], df[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
-  plot(df2[,"pico.influx"], df2[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
-  plot(df3[,"pico.influx"], df3[,paste0("pico.seaflow.median",s)], xlab="Influx", ylab='SeaFlow', pch=21, bg=alpha('green',t),las=1, xlim=c(0,80), ylim=c(0,80)); abline(b=1, a=0, lty=2)
+##############################
+### 5. BEST SLOPE + OFFSET ###
+##############################
+library(viridis)
+group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
+levels(df2$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
+
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pro.influx - pro.seaflow.each2)/pro.influx)) +
+  geom_histogram(binwidth=w, position=pos, alpha=0.75, fill=group.colors[3]) +
+  geom_histogram(aes((syn.influx - syn.seaflow.each2)/syn.influx), binwidth=w, position=pos, alpha=0.75, fill=group.colors[4]) +
+  geom_histogram(aes((pico.influx - pico.seaflow.median2)/pico.influx), binwidth=w, position=pos, alpha=0.75, fill=group.colors[5]) +
+  geom_vline(xintercept=0, lty=2) +
+  scale_x_continuous(limits=c(-5,5)) +
+  facet_wrap(~ corr) 
+print(paste0("best SLOPE-OFFSET method: corr=",2))  
+
 
 
 
 
 ###################
-### 6. PLOTTING ###
+### 7. PLOTTING ###
 ###################
 library(tidyverse)
 library(viridis)
 library(ggpubr)
-s <- best.vc.method
 
-df1 <- subset(DF, corr== best.offset)
+df1 <- subset(DF, corr== 2)
 
 df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
   df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
   df2$cruise <- df2b$cruise
 
-data <- tibble(cruise=as.factor(rep(as.character(df2$cruise), 6)),
-                  time=as.POSIXct(rep(df2$time,6)),
-                  population=rep(c("prochloro","synecho","picoeuk"), each=nrow(df2)*2),
-                  instrument=rep(c("SeaFlow","Influx"),nrow(df2)*3),
-                  abundance=c(df2[,paste0("pro.seaflow.each",s)],df2[,paste0("pro.influx")],
-                              df2[,paste0("syn.seaflow.each",s)], df2[,paste0("syn.influx")],
-                              df2[,paste0("pico.seaflow.median",s)], df2[,paste0("pico.influx")])
-                              )
-
 #remove SeaFlow pico data for Thompson_9
-data[which(data$population == 'picoeuk' & data$cruise == 'Thompson_9'), 'abundance'] <- NA
+df2[which(df2$cruise == 'Thompson_9'), 'pico.seaflow.median4'] <- NA
+  
 
-group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
+df2 %>%
+  ggplot(aes(pro.influx - pro.seaflow.each2, fill=cruise)) + 
+  geom_histogram(cex=6, pch=21, alpha=0.5) +
+  geom_vline(xintercept=0) +
+  #scale_fill_viridis_d(option = "D") +
+  #labs(x="time", y= "diff Influx - SeaFlow") +
+  theme_bw()  
 
+df2 %>%
+  ggplot(aes(time, pro.seaflow.each2)) + 
+  geom_point(cex=6, pch=21, alpha=0.5, fill=group.colors[3]) +
+  geom_point(aes(time, syn.seaflow.each2), pch=21, alpha=0.5, cex=6, fill=group.colors[4]) +
+  geom_point(aes(time, pico.seaflow.median2), pch=21, alpha=0.5, cex=6, fill=group.colors[5]) +
+  geom_point(aes(time, pro.influx), pch=21, alpha=0.5, cex=2, fill=group.colors[3]) +
+  geom_point(aes(time, syn.influx), pch=21, alpha=0.5, cex=2, fill=group.colors[4]) +
+  geom_point(aes(time, pico.influx), pch=21, alpha=0.5, cex=2, fill=group.colors[5]) +
+  facet_wrap(~ cruise, scales="free_x") +
+  scale_y_continuous(trans= 'log10') +
+  labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
+  theme_bw()   
 
-levels(data$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
-
-
-p <- data %>%
-      ggplot() +
-      geom_point(aes(x=time, y=abundance,fill=population, size=instrument), pch=21, alpha=0.5, show.legend=T) +
-      facet_wrap( ~ cruise, scales='free_x') +
-      scale_y_continuous(trans= 'log10') +
-      scale_fill_manual(values=group.colors) +
-      labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
-      theme_bw()
-p
-
+ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9)
 ggsave("SeaFlowInflux-CRUISEcomparison.pdf", width=12, height=9)
 
 
 
-s <- subset(data, instrument == "SeaFlow")$abundance
-i <- subset(data, instrument == "Influx")$abundance
-population <- subset(data, instrument == "Influx")$population
+
+
+##### DIFFERENCE
+s <- c(df2$pro.seaflow.each2, df2$syn.seaflow.each2, df2$pico.seaflow.median2)
+i <- c(df2$pro.influx, df2$syn.influx, df2$pico.influx)
+population <- rep(c("prochloro","synecho","picoeuk"), each=nrow(df2))
 df <- tibble(s,i, population)
-df$population <- factor(df$population, levels = names(group.colors))
 
 # calculate Percentage difference
 # df$error <- 2*(df$i - df$s)/(df$i + df$s)
 
 # calculate Log difference
-df$error <- log10(df$i/df$s)
+df$error <- df$i/df$s
+
 fold <- c(2,10)
-print(paste(round(length(which(abs(df$error) < log10(fold[1])))/nrow(df),2), "% of estimates have less than ",fold[1],"fold difference"))
-print(paste(round(length(which(abs(df$error) > log10(fold[2])))/nrow(df),2), "% of estimates have more than ",fold[2],"fold difference"))
+print(paste(round(100*length(which(abs(df$error) < fold[1]))/nrow(df),2), "% of estimates have less than ",fold[1],"fold difference"))
+print(paste(round(100*length(which(abs(df$error) > fold[2]))/nrow(df),2), "% of estimates have more than ",fold[2],"fold difference"))
 
 r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
 
@@ -622,8 +626,9 @@ p1 <- df %>%
     annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
     theme_bw()
 
+df$error <- log10(df$error)
 p2 <- df %>%
-    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=0.1, color='black', alpha=0.75, size=0.25) +
+    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=0.05, color='black', alpha=0.75, size=0.25) +
     scale_fill_manual(values=group.colors) +
     geom_vline(xintercept=log10(2), lwd=0.5, lty=2) +
     geom_vline(xintercept=-log10(2), lwd=0.5, lty=2) +
@@ -632,4 +637,4 @@ p2 <- df %>%
 
 ggarrange(p1, p2, labels = c("a", "b"), ncol = 2, nrow = 1)
 
-ggsave("SeaFlowInflux-correlation-v2.pdf", width=8, height=4)
+#ggsave("SeaFlowInflux-correlation-v2.pdf", width=8, height=4)
