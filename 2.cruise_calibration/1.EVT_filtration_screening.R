@@ -18,7 +18,7 @@ path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/"
 ####################################
 ### 1. SET FILTRATION PARAMETERS ###
 ####################################
-beads.coord <- read.csv("https://raw.githubusercontent.com/armbrustlab/seaflow-filter/master/ALL-filterparams.csv")
+beads.coord <- read.csv("https://raw.githubusercontent.com/seaflow-uw/seaflow-filter/master/ALL-filterparams.csv")
 
 
 #Path to the Git repository
@@ -233,14 +233,16 @@ write.csv(ALL, paste0(cruise,"data/seaflow-summary.csv"), quote=F, row.names=F)
 
 
 
-##################
-### 2. SUMMARY ###
-##################
+####################
+### 2. HARMONIZE ###
+####################
 library(lattice)
-library(lmodel2)
 library(popcycle)
 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
+beads.coord <- read.csv("https://raw.githubusercontent.com/seaflow-uw/seaflow-filter/master/ALL-filterparams.csv")
+
+path.to.data <- "~/Documents/DATA/Codes/seaflow-virtualcore/"
 
 allcruises <- c("SCOPE_6", "SCOPE_2", "DeepDOM", "MBARI_1","SCOPE_16","Thompson_9", "MGL1704", "HOT")
 cruise <- allcruises[8]
@@ -327,7 +329,6 @@ influx <- influx[order(influx$time), ]
 
 if(cruise != 'MBARI_1' & cruise !="HOT"){
       inst <- as.numeric(beads.coord[which(beads.coord$cruise == cruise & beads.coord$quantile == 50),"instrument"])
-      sfl <- read.delim(paste0("https://raw.githubusercontent.com/armbrustlab/seaflow-sfl/master/curated/", cruise,"_",inst, ".sfl"))
       sfl$date <- as.POSIXct(sfl$DATE, format="%FT%T", tz='GMT')
       sfl$flow_rate2 <- flowrate(sfl$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
       }
@@ -339,7 +340,7 @@ if(cruise == "HOT"){
               sfl <- NULL
                 for(i in c){
                   inst <- as.numeric(beads.coord[which(beads.coord$cruise == i & beads.coord$quantile == 50),"instrument"])
-                  s <- read.delim(paste0("https://raw.githubusercontent.com/armbrustlab/seaflow-sfl/master/curated/", i,"_",inst, ".sfl"))
+                  s <- read.delim(paste0("https://raw.githubusercontent.com/seaflow-uw/seaflow-sfl/master/curated/", i,"_",inst, ".sfl"))
                   s$date <- as.POSIXct(s$DATE, format="%FT%T", tz='GMT')
                   s$flow_rate2 <- flowrate(s$STREAM.PRESSURE, inst =inst)[,"flow_rate"]
                   sfl <- rbind(sfl, s)
@@ -353,76 +354,47 @@ if(cruise == "SCOPE_16") ALL <- ALL[!(ALL$file =="2016-04-26T15-07-38-00-00"),]
 if(cruise == "DeepDOM") ALL <- ALL[!(ALL$file =="2013_094/321.evt" | ALL$file=="2013_124/409.evt"),]
 if(cruise == "Thompson_9" | cruise == "SCOPE_2" | cruise == 'MGL1704' | cruise == "HOT") ALL$file <- sub(".gz","", ALL$file)
 
-  ALL$cruise <- cruise
-  id2 <- match(ALL[,'file'],as.character(sfl[,"FILE"]))
+ALL$cruise <- cruise
+id2 <- match(ALL[,'file'],as.character(sfl[,"FILE"]))
 
-  ALL$time <- sfl[id2, 'date'] # add time
-    ALL <- ALL[order(ALL$time), ]
+ALL$time <- sfl[id2, 'date'] # add time
+ALL <- ALL[order(ALL$time), ]
+ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate
 
-  ALL$fr <- sfl[id2, 'flow_rate2'] # add flow rate
-
-  # add abundance from INFLUX
-  id <- findInterval(ALL$time,influx$time)
-  if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9"| cruise == "SCOPE_2" | cruise == "HOT") id <- id +1
-  for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]
-
-
-
-  ############### TEST different VC method ###################################
-  correction <- 1
-  if(cruise == "Thompson_9") correction <- 0.14 # correction factor due to troncated D1 / D2 (based on Seaflow_uncorrected abundance / influx)
-
-  ALL$vc1 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
-  ALL$vc2 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
-  ALL$vc3 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
-  ALL$vc4 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
+# add abundance from INFLUX
+id <- findInterval(ALL$time,influx$time)
+if(cruise =="DeepDOM"| cruise == "SCOPE_16" | cruise == "Thompson_9"| cruise == "SCOPE_2" | cruise == "HOT") id <- id +1
+for (phyto in c('pro','syn','pico'))   ALL[,paste0(phyto,'.influx')] <- influx[id,phyto]
 
 
 
-  # calculate abundance from Seaflow
-  for (phyto in c('pro','syn','pico')){
-      ALL[,paste0(phyto,'.seaflow.each1')] <- ALL[,phyto] / ALL$vc1
-      ALL[,paste0(phyto,'.seaflow.median1')] <- ALL[,phyto] / median(ALL$vc1)
-      ALL[,paste0(phyto,'.seaflow.each2')] <- ALL[,phyto] / ALL$vc2
-      ALL[,paste0(phyto,'.seaflow.median2')] <- ALL[,phyto] / median(ALL$vc2)
-      ALL[,paste0(phyto,'.seaflow.each3')] <- ALL[,phyto] / ALL$vc3
-      ALL[,paste0(phyto,'.seaflow.median3')] <- ALL[,phyto] / median(ALL$vc3)
-      ALL[,paste0(phyto,'.seaflow.each4')] <- ALL[,phyto] / ALL$vc4
-      ALL[,paste0(phyto,'.seaflow.median4')] <- ALL[,phyto] / median(ALL$vc4)
-      }
+### TEST different VC method 
+correction <- 1
+if(cruise == "Thompson_9") correction <- 0.14 # correction factor due to troncated D1 / D2 (based on Seaflow_uncorrected abundance / influx)
 
-      if(cruise == "Thompson_9") for(s in 1:4) ALL[,paste0('pro.seaflow.each',s)] <- ALL[,paste0('pro.seaflow.each',s)] + 150 # correction factor due to troncated D1 / D2 (based on Seaflow_corrected abundance - influx)
-
-          # par(mfrow=c(3,1),cex=1.2)
-          # for (phyto in c('pro','syn','pico')){
-          #         plot(ALL[,'time'],ALL[,paste0(phyto,'.influx')],ylim=c(0,2*max(ALL[,paste0(phyto,'.influx')])),type='o', ylab="abundance", xlab=NA, main=paste(phyto))
-          #         for(s in 1:4){
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.each',s)],col=s)
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.seaflow.median',s)],col=s, pch=2)
-          #           }
-          #         }
-
-    # calculate error between seaflow-based and influx-based abundance
-    for (phyto in c('pro','syn','pico')){
-      for(s in 1:4){
-        ALL[,paste0(phyto,".diff.each",s)] <- abs(ALL[,paste0(phyto,'.seaflow.each',s)] - ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]
-        ALL[,paste0(phyto,".diff.median",s)] <- abs(ALL[,paste0(phyto,'.seaflow.median',s)] -ALL[,paste0(phyto,'.influx')]) / ALL[,paste0(phyto,'.influx')]
-            }
-      }
-
-          # par(mfrow=c(3,1),cex=1.2)
-          # for (phyto in c('pro','syn','pico')){
-          #         plot(ALL[,'time'],rep(0, nrow(ALL)),ylim=c(0,1),type='l', ylab="Diff", xlab=NA, main=paste(phyto))
-          #         for(s in 1:4){
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.each',s)],col=s)
-          #           points(ALL[,'time'],ALL[,paste0(phyto,'.diff.median',s)],col=s, pch=2)
-          #           }
-          #         }
+ALL$vc1 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt'] # calculate virtual core v1
+ALL$vc2 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp']/ALL[,'n.evt.'] # calculate virtual core v2
+ALL$vc3 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt'] # calculate virtual core v3
+ALL$vc4 <- correction * 1000* 3*ALL[,'fr']*ALL[,'n.opp.']/ALL[,'n.evt.'] # calculate virtual core v4
 
 
-    DF <- rbind(DF,ALL)
+
+# calculate abundance from Seaflow
+for (phyto in c('pro','syn','pico')){
+    ALL[,paste0(phyto,'.seaflow.each1')] <- ALL[,phyto] / ALL$vc1
+    ALL[,paste0(phyto,'.seaflow.median1')] <- ALL[,phyto] / median(ALL$vc1)
+    ALL[,paste0(phyto,'.seaflow.each2')] <- ALL[,phyto] / ALL$vc2
+    ALL[,paste0(phyto,'.seaflow.median2')] <- ALL[,phyto] / median(ALL$vc2)
+    ALL[,paste0(phyto,'.seaflow.each3')] <- ALL[,phyto] / ALL$vc3
+    ALL[,paste0(phyto,'.seaflow.median3')] <- ALL[,phyto] / median(ALL$vc3)
+    ALL[,paste0(phyto,'.seaflow.each4')] <- ALL[,phyto] / ALL$vc4
+    ALL[,paste0(phyto,'.seaflow.median4')] <- ALL[,phyto] / median(ALL$vc4)
   }
 
+if(cruise == "Thompson_9") for(s in 1:4) ALL[,paste0('pro.seaflow.each',s)] <- ALL[,paste0('pro.seaflow.each',s)] + 150 # correction factor due to troncated D1 / D2 (based on Seaflow_corrected abundance - influx)
+
+DF <- rbind(DF,ALL)
+}
 
 write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
 
@@ -436,49 +408,119 @@ write.csv(DF,paste0("SeaflowInflux_comparison.csv"), quote=F, row.names=F)
 
 
 
-
-
-
-
-###########################################
-### 3. file-based VC vs cruise-based VC ###
-###########################################
+########################
+### 3. VISUALIZATION ###
+########################
 library(tidyverse)
-
+library(viridis)
+ 
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore/2.cruise_calibration/")
+beads.coord <- read.csv("https://raw.githubusercontent.com/seaflow-uw/seaflow-filter/master/ALL-filterparams.csv")
+slopes <- read.csv("seaflow_filter_slopes.csv")
+
 DF <- read_csv("SeaflowInflux_comparison.csv")
+
+# mean technical replicate MBARI_1
+mb <- DF %>%
+      filter(cruise == "MBARI_1") %>%
+      group_by(pro.influx, corr) %>%
+      summarize_all(mean) %>%
+      select(file, n.opp:width, corr, everything())
+mb$cruise <- "MBARI_1"
+
+DF <- DF %>% 
+  filter(cruise != "MBARI_1") %>% 
+  bind_rows(mb)
+
+
 DF$corr <- factor(as.character(DF$corr), levels=c("0","2500","5000","7500","10000","1","2","3","4"))
-  
-# split by method
-pos <- "stack"
-pos <- "identity"
+
 
 DF %>%
   filter(cruise !="Thompson_9") %>%
-  ggplot(aes((pro.influx - pro.seaflow.each4)/pro.influx)) +
-  geom_histogram(position=pos, alpha=0.5, fill="red3") +
-  geom_histogram(aes((pro.influx - pro.seaflow.median4)/pro.influx), position=pos, alpha=0.5) +
+  ggplot(aes(pro.influx, pro/vc2, col=notch.large.D1)) +
+  geom_point(alpha=0.5) +
+  geom_smooth() +
+  geom_abline(a=0, b=1, lty=2, col=2) +
+  scale_color_viridis_c() +
+  scale_x_continuous(limits=c(50,300),trans="log10") +
+  scale_y_continuous(limits=c(50,300), trans="log10") +
+  facet_wrap(~ corr) 
+
+
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes(pico.influx, pico.seaflow.median2, col=notch.large.D1/mean(slopes$notch.large.D1))) +
+  geom_point(alpha=0.5) +
+  geom_smooth() +
+  geom_abline(a=0, b=1, lty=2, col=2) +
+  scale_color_viridis_c() +
+  scale_x_continuous(limits=c(0.1,200), trans="log10") +
+  scale_y_continuous(limits=c(0.1,200), trans="log10") +
+  facet_wrap(~ corr) 
+
+
+###  Calibration needed?
+
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes(pro.influx,  (pro/vc2) * notch.small.D1/mean(slopes$notch.small.D1), col=notch.large.D1/mean(slopes$notch.large.D1))) +
+  geom_point(alpha=0.5) +
+  geom_smooth() +
+  geom_abline(a=0, b=1, lty=2, col=2) +
+  scale_color_viridis_c() +
+  scale_x_continuous(limits=c(50,300), trans="log10") +
+  scale_y_continuous(limits=c(50,300), trans="log10") +
+  facet_wrap(~ corr) 
+
+
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes(pico.influx, (pico/median(vc2)) * -log10(abs(1-notch.large.D1/mean(slopes$notch.large.D1))), col=notch.large.D1/mean(slopes$notch.large.D1))) +
+  geom_point(alpha=0.5) +
+  geom_smooth() +
+  geom_abline(a=0, b=1, lty=2, col=2) +
+  scale_color_viridis_c() +
+  scale_x_continuous(limits=c(0.1,200), trans="log10") +
+  scale_y_continuous(limits=c(0.1,200), trans="log10") +
+  facet_wrap(~ corr) 
+
+
+
+
+###########################################
+### 4. file-based VC vs cruise-based VC ###
+###########################################
+DF %>%
+  filter(cruise !="Thompson_9") %>%
+  ggplot(aes((pro.influx - pro.seaflow.each2)/pro.influx)) +
+  geom_histogram(alpha=0.5, fill="red3") +
+  geom_histogram(aes((pro.influx - pro.seaflow.median2)/pro.influx), position=pos, alpha=0.5) +
   geom_vline(xintercept=0, lty=2) +
   scale_x_continuous(limits=c(-5,5)) +
   facet_wrap(~ corr) 
 
 DF %>%
   filter(cruise !="Thompson_9") %>%
-  ggplot(aes((syn.influx - syn.seaflow.each4)/syn.influx)) +
-  geom_histogram(position=pos, alpha=0.5, fill='red3') +
-  geom_histogram(aes((syn.influx - syn.seaflow.median4)/syn.influx), position=pos, alpha=0.5) +
+  ggplot(aes((syn.influx - syn.seaflow.each2)/syn.influx)) +
+  geom_histogram(alpha=0.5, fill='red3') +
+  geom_histogram(aes((syn.influx - syn.seaflow.median2)/syn.influx), position=pos, alpha=0.5) +
   geom_vline(xintercept=0, lty=2) +
   scale_x_continuous(limits=c(-5,5)) +
   facet_wrap(~ corr)
 
 DF %>%
   filter(cruise !="Thompson_9") %>%
-  ggplot(aes((pico.influx - pico.seaflow.each4)/pico.influx)) +
-  geom_histogram(position=pos, alpha=0.5, fill='red3') +
-  geom_histogram(aes((pico.influx - pico.seaflow.median4)/pico.influx), position=pos, alpha=0.5) +
+  ggplot(aes((pico.influx - pico.seaflow.each2)/pico.influx)) +
+  geom_histogram(alpha=0.5, fill='red3') +
+  geom_histogram(aes((pico.influx - pico.seaflow.median2)/pico.influx), position=pos, alpha=0.5) +
   geom_vline(xintercept=0, lty=2) +
   scale_x_continuous(limits=c(-5,5)) +
   facet_wrap(~ corr)
+
+
+
+
 
 ##############################
 ### 5. BEST VC calculation ###
@@ -490,7 +532,7 @@ DF %>%
 # n.opp./n.evt. # v4 wo small particles nor electrical noise
 
 # split by method
-w <- 0.1
+w <- 0.2
 DF %>%
   filter(cruise !="Thompson_9") %>%
   ggplot(aes((pro.influx - pro.seaflow.each1)/pro.influx)) +
@@ -528,12 +570,15 @@ DF %>%
 print(paste0("best VC method: vc", 2, " > ", 4))  
 
 
+
+
+
+
 ##############################
-### 5. BEST SLOPE + OFFSET ###
+### 6. BEST SLOPE + OFFSET ###
 ##############################
 library(viridis)
 group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
-levels(df2$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
 
 DF %>%
   filter(cruise !="Thompson_9") %>%
@@ -544,7 +589,7 @@ DF %>%
   geom_vline(xintercept=0, lty=2) +
   scale_x_continuous(limits=c(-5,5)) +
   facet_wrap(~ corr) 
-print(paste0("best SLOPE-OFFSET method: corr=",2))  
+print(paste0("best SLOPE-OFFSET method: corr= ",2, " > ", 4))  
 
 
 
@@ -556,6 +601,7 @@ print(paste0("best SLOPE-OFFSET method: corr=",2))
 library(tidyverse)
 library(viridis)
 library(ggpubr)
+group.colors <- c(unknown='grey', beads='red3', prochloro=viridis(4)[1],synecho=viridis(4)[2],picoeuk=viridis(4)[3], croco=viridis(4)[4])
 
 df1 <- subset(DF, corr== 2)
 
@@ -563,17 +609,19 @@ df2 <- aggregate(df1, by=list(df1$time), FUN=function(x) mean(x, na.rm=T))
   df2b <- aggregate(df1, by=list(df1$time), FUN=function(x) x[1])
   df2$cruise <- df2b$cruise
 
+levels(df2$cruise) <- c("KN210-04","HOT","CN11","MGL1704" ,"KOK1606","KM1502","KM1513","TN271")
+  
 #remove SeaFlow pico data for Thompson_9
-df2[which(df2$cruise == 'Thompson_9'), 'pico.seaflow.median4'] <- NA
+df2[which(df2$cruise == 'Thompson_9'), 'pico.seaflow.median2'] <- NA
   
 
-df2 %>%
-  ggplot(aes(pro.influx - pro.seaflow.each2, fill=cruise)) + 
-  geom_histogram(cex=6, pch=21, alpha=0.5) +
-  geom_vline(xintercept=0) +
-  #scale_fill_viridis_d(option = "D") +
-  #labs(x="time", y= "diff Influx - SeaFlow") +
-  theme_bw()  
+# df2 %>%
+#   ggplot(aes(pro.influx - pro.seaflow.each2, fill=cruise)) + 
+#   geom_histogram(alpha=0.75) +
+#   geom_vline(xintercept=0, lty=2) +
+#   #scale_fill_viridis_d(option = "D") +
+#   #labs(x="time", y= "diff Influx - SeaFlow") +
+#   theme_bw()  
 
 df2 %>%
   ggplot(aes(time, pro.seaflow.each2)) + 
@@ -588,53 +636,59 @@ df2 %>%
   labs(x="", y=expression(paste("Abundance (cells µL"^{-1},")"))) +
   theme_bw()   
 
-ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=9)
-ggsave("SeaFlowInflux-CRUISEcomparison.pdf", width=12, height=9)
+ggsave("SeaFlowInflux-CRUISEcomparison.png", width=12, height=7)
+ggsave("SeaFlowInflux-CRUISEcomparison.pdf", width=12, height=7)
 
 
 
 
 
 ##### DIFFERENCE
-s <- c(df2$pro.seaflow.each2, df2$syn.seaflow.each2, df2$pico.seaflow.median2)
-i <- c(df2$pro.influx, df2$syn.influx, df2$pico.influx)
+s <- c(df1$pro.seaflow.each2, df1$syn.seaflow.each2, df1$pico.seaflow.median2)
+i <- c(df1$pro.influx, df1$syn.influx, df1$pico.influx)
 population <- rep(c("prochloro","synecho","picoeuk"), each=nrow(df2))
 df <- tibble(s,i, population)
+df$population <- factor(df$population, levels=names(group.colors))
 
-# calculate Percentage difference
-# df$error <- 2*(df$i - df$s)/(df$i + df$s)
 
-# calculate Log difference
-df$error <- df$i/df$s
+# regression
+lm(s ~ i , df)
 
-fold <- c(2,10)
+df$error <-  (df$i-df$s)/(df$s) # hist(df$error, xlim=c(-20,20))
+df$error <- (df$i-df$s)/(df$i) # hist(df$error, n=300,xlim=c(-2,2))
+
+fold <- c(1,2)
 print(paste(round(100*length(which(abs(df$error) < fold[1]))/nrow(df),2), "% of estimates have less than ",fold[1],"fold difference"))
 print(paste(round(100*length(which(abs(df$error) > fold[2]))/nrow(df),2), "% of estimates have more than ",fold[2],"fold difference"))
 
 r <- round(cor(df$i,df$s,use='pairwise.complete.obs',  method= 'pearson'),2)
 
 p1 <- df %>%
-    ggplot(aes(x=s, y=i)) +
-    geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
-    geom_abline(intercept=0, col=1, lwd=0.5, lty=2) +
-    geom_smooth(method='glm',col='red3',lwd=0.5) +
-    scale_y_continuous(trans= 'log10') +
-    scale_x_continuous(trans= 'log10') +
-    scale_fill_manual(values=group.colors, guide=F) +
-    labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
-    annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
-    annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
-    theme_bw()
+  ggplot(aes(x=s, y=i)) +
+  geom_point(aes(x=s, y=i, fill=population), pch=21, alpha=0.5, show.legend=T, cex=2) +
+  geom_abline(intercept=0, col=1, lwd=0.5, lty=2) +
+  geom_smooth(method = "glm",col='red3',lwd=0.5) +
+  scale_y_continuous(trans= 'log10') +
+  scale_x_continuous(trans= 'log10') +
+  scale_fill_manual(values=group.colors, guide=F) +
+  labs(x=expression(paste("SeaFlow (cells µL"^{-1},")")), y=expression(paste("Influx (cells µL"^{-1},")"))) +
+  annotate("text", x = 0.2, y=300, label = paste("r =",r)) +
+  annotate("text", x = 0.2, y=200, label = paste("n =",nrow(df))) +
+  theme_bw()
 
-df$error <- log10(df$error)
 p2 <- df %>%
-    ggplot(aes(x=error)) + geom_histogram(aes(x=error, fill=population), binwidth=0.05, color='black', alpha=0.75, size=0.25) +
-    scale_fill_manual(values=group.colors) +
-    geom_vline(xintercept=log10(2), lwd=0.5, lty=2) +
-    geom_vline(xintercept=-log10(2), lwd=0.5, lty=2) +
-    labs(x=expression(paste("Log difference")), y=expression(paste("Count"))) +
-    theme_bw()
+  ggplot(aes(x=error)) + 
+  geom_histogram(aes(fill=population), bins=30, color='black', alpha=0.75, size=0.25) +
+  scale_fill_manual(values=group.colors) +
+  scale_x_continuous(limits=c(-5,5)) +
+  #geom_vline(xintercept=c(-1,1), lwd=0.5, lty=2) +
+  geom_vline(xintercept=0, lwd=0.5, col="red3") +
+  labs(x=expression(paste("Fold difference (Influx - SeaFlow)")), y=expression(paste("Count"))) +
+  theme_bw()
 
 ggarrange(p1, p2, labels = c("a", "b"), ncol = 2, nrow = 1)
 
-#ggsave("SeaFlowInflux-correlation-v2.pdf", width=8, height=4)
+
+
+ggsave("SeaFlowInflux-correlation-v2.png", width=8, height=4)
+ggsave("SeaFlowInflux-correlation-v2.pdf", width=8, height=4)
