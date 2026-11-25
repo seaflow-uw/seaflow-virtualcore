@@ -247,13 +247,23 @@ dev.off()
 ###############
 setwd("~/Documents/DATA/Codes/seaflow-virtualcore")
 
-png("1.bead_calibration/ALL_MERGED_Slopes.png",width=12, height=15, unit='in', res=100)
-par(mfrow=c(3,2),cex=1.2)
+png("1.bead_calibration/ALL_MERGED_Slopes.png",width=12, height=20, unit='in', res=100)
+par(mfrow=c(4,2),cex=1.2)
 
 SLOPES <- NULL
 
-for(ins in c(989,751,740)){
+for(ins in c(989,751,740,130)){
 print(ins)
+
+  if(ins == 130){
+    # SeaFlow V2 (130): one PMT setting, no oligo/coastal merging.
+    # 130-summary.csv comes from 1b.EVT_beadscoordinate_130.R (one row per file);
+    # one point per bead size and experiment day (median of the replicate files).
+    ALL <- read.csv("1.bead_calibration/130-summary.csv")
+    ALL <- subset(ALL, beads > 0)
+    DF <- aggregate(cbind(fsc=fsc.med, D1=d1.med, D2=d2.med) ~ size + experiment, data=ALL, FUN=median)
+    DF <- DF[order(DF$size), c("fsc","D1","D2","size")]
+  }else{
 
       #ins<- "751"
     ALL <- read.csv(paste0("1.bead_calibration/",ins,"-summary.csv"))
@@ -280,6 +290,7 @@ print(ins)
 
     DF <- data.frame(cbind(fsc=c(df.o$fsc.med,df.c$fsc.med+comp.fsc), D1=c(df.o$d1.med,df.c$d1.med+comp.d1),D2=c(df.o$d2.med,df.c$d2.med+comp.d2), size=c(df.o$beads.size,df.c$beads.size)))
     DF <- DF[order(DF$size),]
+  }
 
 
     slope <- NULL
@@ -313,8 +324,9 @@ print(ins)
                 abline(b=slope[,i],a=slope[,i+1], lwd=2, col=col[c])
                 c <- c+1}
 
-                points(DF$fsc, DF[,param], pch=21, bg=rep(alpha(viridis(7),0.5),each=2), cex=2)
-                legend("topleft",legend=paste(unique(DF$size), "µm beads"), cex=1, pch=21, bty='n',pt.bg=alpha(viridis(7),0.5))
+                sizes <- sort(unique(DF$size))
+                points(DF$fsc, DF[,param], pch=21, bg=alpha(viridis(7),0.5)[match(DF$size, sizes)], cex=2)
+                legend("topleft",legend=paste(sizes, "µm beads"), cex=1, pch=21, bty='n',pt.bg=alpha(viridis(7),0.5)[seq_along(sizes)])
 
               }
 
@@ -327,4 +339,4 @@ print(ins)
 dev.off()
 
 write.csv(SLOPES, "1.bead_calibration/seaflow_filter_slopes.csv", quote=F, row.names=F)
-write.csv(DF, paste0("1.bead_calibration/",inst,"-beadscoordinates.csv"), quote=F, row.names=F)
+write.csv(DF, paste0("1.bead_calibration/",ins,"-beadscoordinates.csv"), quote=F, row.names=F)
